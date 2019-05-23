@@ -1,0 +1,26 @@
+{"1.1.0",
+[{<<"emqttc">>,
+  {git,"git@github.com:emqtt/emqttc.git",
+       {ref,"1a0d45085b987bdca74a6efbdc18aa5af85bfc43"}},
+  0},
+ {<<"flatlog">>,
+  {git,"https://github.com/ferd/flatlog.git",
+       {ref,"24baef3298bd7b6a4a94a9f021d5f492ad98d691"}},
+  0},
+ {<<"gproc">>,{pkg,<<"gproc">>,<<"0.8.0">>},0},
+ {<<"iso8601">>,
+  {git,"https://github.com/erlsci/iso8601.git",
+       {ref,"fdb0fd12d729c53f4ae6f8c2f893fd6698b8b10e"}},
+  0},
+ {<<"jsone">>,{pkg,<<"jsone">>,<<"1.4.7">>},0},
+ {<<"quickrand">>,{pkg,<<"quickrand">>,<<"1.7.5">>},1},
+ {<<"recon">>,{pkg,<<"recon">>,<<"2.5.0">>},0},
+ {<<"uuid">>,{pkg,<<"uuid_erl">>,<<"1.7.3">>},0}]}.
+[
+{pkg_hash,[
+ {<<"gproc">>, <<"CEA02C578589C61E5341FCE149EA36CCEF236CC2ECAC8691FBA408E7EA77EC2F">>},
+ {<<"jsone">>, <<"A970C23D9700AE7842B526C57677E6E3F10894B429524696EAD547E9302391C0">>},
+ {<<"quickrand">>, <<"E3086A153EB13A057FC19192D05E2D4C6BB2BDBB55746A699BEAE9847AC17CA8">>},
+ {<<"recon">>, <<"2F7FCBEC2C35034BADE2F9717F77059DC54EB4E929A3049CA7BA6775C0BD66CD">>},
+ {<<"uuid">>, <<"C5DF97D1A3D626235C2415E74053C47B2138BB863C5CD802AB5CAECB8ECC019F">>}]}
+].

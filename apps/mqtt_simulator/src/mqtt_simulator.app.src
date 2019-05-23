@@ -1,0 +1,17 @@
+{application, mqtt_simulator,
+ [{description, "Description here."},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, {mqtt_simulator_app, []}},
+  {applications,
+   [kernel,
+    stdlib,
+    gproc
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {maintainers, []},
+  {licenses, []},
+  {links, []}
+ ]}.

@@ -1,0 +1,6 @@
+-sname mqtt_simulator
+
+-setcookie mqtt_simulator_cookie
+
++K true
++A30
