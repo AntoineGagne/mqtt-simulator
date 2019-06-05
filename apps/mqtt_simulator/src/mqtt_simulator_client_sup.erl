@@ -10,7 +10,8 @@
 
 -define(VIA_GPROC(Id), {via, gproc, {n, l, Id}}).
 -define(CLIENT_ID(Id), {client, Id}).
--define(DATA_SIMULATOR_SUP_ID(Id), {data_simulator_sup_id, Id}).
+-define(SUP_ID(Id), {data_simulator_sup_id, Id}).
+-define(CONFIG_ID(Id), {data_simulator_config_id, Id}).
 -define(SERVER, ?MODULE).
 
 %%====================================================================
@@ -29,18 +30,27 @@ start_link(Id, Config) ->
 init([Config]) ->
     Id = mqtt_simulator_client_config:id(Config),
     ClientId = ?CLIENT_ID(Id),
+    ConfigId = ?CONFIG_ID(Id),
+    SupId = ?SUP_ID(Id),
     {ok, {#{strategy => one_for_all,
             intensity => 5,
             period => 10},
           [#{id => mqtt_simulator_data_simulators_sup,
              start => {mqtt_simulator_data_simulators_sup, start_link,
-                       [?DATA_SIMULATOR_SUP_ID(Id), ClientId]},
+                       [SupId, ClientId]},
              restart => permanent,
              shutdown => 5000,
              type => supervisor,
              modules => [mqtt_simulator_data_simulators_sup]},
+           #{id => mqtt_simulator_data_simulators_sup,
+             start => {mqtt_simulator_data_simulators_config, start_link,
+                       [ConfigId, SupId]},
+             restart => permanent,
+             shutdown => 5000,
+             type => supervisor,
+             modules => [mqtt_simulator_data_simulators_sup]}
            #{id => mqtt_simulator_client,
-             start => {mqtt_simulator_client, start_link, [ClientId, Config]},
+             start => {mqtt_simulator_client, start_link, [ClientId, ConfigId, Config]},
              restart => permanent,
              shutdown => 5000,
              type => worker,
