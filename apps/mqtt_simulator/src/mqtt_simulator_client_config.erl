@@ -18,18 +18,19 @@
          data/2]).
 
 -opaque config() :: #{id := term(),
-                      host := inet:ip_address() | string(),
+                      host := inet:ip_address() | binary(),
                       port := inet:port_number(),
                       username => binary(),
                       password => binary(),
                       reconnect_timeout := pos_integer(),
                       data := [data()]}.
--type data() :: #{values := [term()],
+-type data() :: #{values := [binary()],
                   interval := pos_integer(),
                   topic := binary()}.
 -type no_such_field_error(Field) :: {error, {no_such_field, Field}}.
 
--export_type([config/0]).
+-export_type([config/0,
+              data/0]).
 
 -define(DEFAULT_RECONNECT_TIMEOUT, 60000).
 
@@ -40,7 +41,7 @@
 -spec init() -> config().
 init() ->
     #{id => <<"">>,
-      host => "",
+      host => <<"">>,
       port => 0,
       reconnect_timeout => ?DEFAULT_RECONNECT_TIMEOUT,
       data => []}.
@@ -53,11 +54,11 @@ id(Id, Config) ->
 id(#{id := Id}) ->
     Id.
 
--spec host(inet:ip_address() | string(), config()) -> config().
+-spec host(inet:ip_address() | binary(), config()) -> config().
 host(Host, Config) ->
     Config#{host := Host}.
 
--spec host(config()) -> inet:ip_address() | string().
+-spec host(config()) -> inet:ip_address() | binary().
 host(#{host := Host}) ->
     Host.
 

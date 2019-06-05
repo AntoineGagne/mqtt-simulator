@@ -40,7 +40,8 @@ init([SyncInterval]) ->
     {ok, #state{sync_timer = SyncTimer,
                 sync_interval = SyncInterval}}.
 
-handle_call({update_config, _Config}, _From, State) ->
+handle_call({update_config, Configs}, _From, State) ->
+    ok = lists:foreach(fun mqtt_simulator_clients_sup:start_client/1, Configs),
     {reply, ok, State}.
 
 handle_cast(_Msg, State) ->

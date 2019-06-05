@@ -18,7 +18,7 @@
 %% API functions
 %%====================================================================
 
--spec start_link(term(), mqtt_simulator_clients_config:config()) ->
+-spec start_link(term(), mqtt_simulator_client_config:config()) ->
     {ok, pid()} | ignore | {error, term()}.
 start_link(Id, Config) ->
     supervisor:start_link(?VIA_GPROC(Id), ?MODULE, [Config]).
@@ -42,13 +42,13 @@ init([Config]) ->
              shutdown => 5000,
              type => supervisor,
              modules => [mqtt_simulator_data_simulators_sup]},
-           #{id => mqtt_simulator_data_simulators_sup,
+           #{id => mqtt_simulator_data_simulators_config,
              start => {mqtt_simulator_data_simulators_config, start_link,
                        [ConfigId, SupId]},
              restart => permanent,
              shutdown => 5000,
-             type => supervisor,
-             modules => [mqtt_simulator_data_simulators_sup]}
+             type => worker,
+             modules => [mqtt_simulator_data_simulators_sup]},
            #{id => mqtt_simulator_client,
              start => {mqtt_simulator_client, start_link, [ClientId, ConfigId, Config]},
              restart => permanent,
