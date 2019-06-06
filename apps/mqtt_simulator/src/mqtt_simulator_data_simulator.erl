@@ -35,12 +35,11 @@ start_link(ClientId, Id, DataPoint) ->
 %%%===================================================================
 
 init([ClientId, #{interval := Interval, topic := Topic, values := Values}]) ->
-    Ref = erlang:start_timer(Interval, self(), send),
     {ok, #state{interval = Interval,
                 client_id = ClientId,
                 topic = Topic,
                 values = queue:from_list(Values),
-                timer = Ref}}.
+                timer = erlang:start_timer(Interval, self(), send)}}.
 
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
@@ -49,9 +48,8 @@ handle_cast(_Msg, State) ->
     {noreply, State}.
 
 handle_info({timeout, _Ref, send}, State=#state{values = Values, interval = Interval}) ->
-    NewRef = erlang:start_timer(Interval, self(), send),
     MaybeValue = queue:out(Values),
-    maybe_send_value(MaybeValue, State#state{timer = NewRef});
+    maybe_send_value(MaybeValue, State#state{timer = erlang:start_timer(Interval, self(), send)});
 
 handle_info(_Info, State) ->
     {noreply, State}.
