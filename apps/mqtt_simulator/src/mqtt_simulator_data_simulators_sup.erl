@@ -9,6 +9,7 @@
 %% Supervisor callbacks
 -export([init/1]).
 
+-define(DATA_SIMULATOR_ID(Id), {data_simulator, Id}).
 -define(VIA_GPROC(Id), {via, gproc, {n, l, Id}}).
 -define(SERVER, ?MODULE).
 
@@ -21,7 +22,8 @@ start_link(Id, ClientId) ->
         supervisor:start_link(?VIA_GPROC(Id), ?MODULE, [ClientId]).
 
 update_config(Id, DataPoint) ->
-    supervisor:start_child(?VIA_GPROC(Id), [DataPoint]).
+    #{id := DataPointId} = DataPoint,
+    supervisor:start_child(?VIA_GPROC(Id), [?DATA_SIMULATOR_ID(DataPointId), DataPoint]).
 
 %%%===================================================================
 %%% supervisor callbacks

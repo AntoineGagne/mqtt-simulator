@@ -3,7 +3,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/2]).
+-export([start_link/3]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -13,7 +13,7 @@
          terminate/2,
          code_change/3]).
 
--define(SERVER, ?MODULE).
+-define(VIA_GPROC(Id), {via, gproc, {n, l, Id}}).
 
 -record(state, {interval :: pos_integer(),
                 client_id :: term(),
@@ -25,8 +25,10 @@
 %%% API
 %%%===================================================================
 
-start_link(ClientId, DataPoint) ->
-    gen_server:start_link(?MODULE, [ClientId, DataPoint], []).
+-spec start_link(term(), term(), mqtt_simulator_client_config:data()) ->
+    {ok, pid()} | ignore | {error, term()}.
+start_link(ClientId, Id, DataPoint) ->
+    gen_server:start_link(?VIA_GPROC(Id), ?MODULE, [ClientId, DataPoint], []).
 
 %%%===================================================================
 %%% gen_server callbacks
