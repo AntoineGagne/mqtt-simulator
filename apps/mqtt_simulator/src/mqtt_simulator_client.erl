@@ -104,6 +104,7 @@ try_connect(Data=#data{config = Config}) ->
     Port = mqtt_simulator_client_config:port(Config),
     ConnectionStatus = emqttc:start_link([{host, binary_to_list(Host)},
                                           {port, Port},
+                                          {logger, {error_logger, none}},
                                           {keepalive, 60},
                                           {reconnect, false}]),
     handle_connection_status(ConnectionStatus, Data).

@@ -17,14 +17,15 @@
          data/1,
          data/2]).
 
--opaque config() :: #{id := term(),
+-opaque config() :: #{id := binary(),
                       host := inet:ip_address() | binary(),
                       port := inet:port_number(),
                       username => binary(),
                       password => binary(),
                       reconnect_timeout := pos_integer(),
                       data := [data()]}.
--type data() :: #{values := [binary()],
+-type data() :: #{id := binary(),
+                  values := [binary()],
                   interval := pos_integer(),
                   topic := binary()}.
 -type no_such_field_error(Field) :: {error, {no_such_field, Field}}.
@@ -46,11 +47,11 @@ init() ->
       reconnect_timeout => ?DEFAULT_RECONNECT_TIMEOUT,
       data => []}.
 
--spec id(term(), config()) -> config().
+-spec id(binary(), config()) -> config().
 id(Id, Config) ->
     Config#{id := Id}.
 
--spec id(config()) -> term().
+-spec id(config()) -> binary().
 id(#{id := Id}) ->
     Id.
 

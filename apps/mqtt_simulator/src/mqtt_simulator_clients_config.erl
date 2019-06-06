@@ -49,7 +49,6 @@ handle_cast(_Msg, State) ->
 
 handle_info({timeout, TimerRef, synchronize}, State=#state{sync_timer = TimerRef,
                                                            sync_interval = SyncInterval}) ->
-    ?LOG_INFO(#{what => config_synchronize}),
     SyncTimer = erlang:start_timer(SyncInterval, self(), synchronize),
     {noreply, State#state{sync_timer = SyncTimer}};
 
