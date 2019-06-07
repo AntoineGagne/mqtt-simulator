@@ -19,7 +19,7 @@
 -record(data, {client = undefined :: pid() | undefined,
                config_id :: term(),
                config :: mqtt_simulator_client_config:config(),
-               reconnect_timeout = ?RETRY_CONNECTION_MILLISECONDS :: integer()}).
+               reconnect_timeout :: integer()}).
 
 %%====================================================================
 %% API functions
@@ -30,6 +30,7 @@
 start_link(Id, ConfigId, Config) ->
     gen_statem:start_link(?VIA_GPROC(Id), ?MODULE, [ConfigId, Config], []).
 
+-spec publish(term(), binary(), binary()) -> ok.
 publish(Id, Topic, Payload) ->
     gen_statem:cast(?VIA_GPROC(Id), {publish, Topic, Payload}).
 
@@ -42,9 +43,7 @@ callback_mode() ->
 
 init([ConfigId, Config]) ->
     process_flag(trap_exit, true),
-    ReconnectTimeout = application:get_env(mqtt_simulator,
-                                           reconnect_timeout,
-                                           ?RETRY_CONNECTION_MILLISECONDS),
+    ReconnectTimeout = mqtt_simulator_client_config:reconnect_timeout(Config),
     self() ! connect,
     {ok, disconnected, #data{config_id = ConfigId,
                              config = Config,
@@ -84,7 +83,8 @@ handle_event({timeout, ping}, _, connected, #data{client = C}) ->
     pong = emqttc:ping(C),
     {keep_state_and_data, {{timeout, ping}, ?PING_TIME_MILLISECONDS, ping}};
 
-handle_event({timeout, reconnect}, _, disconnected, #data{client = undefined}=Data) ->
+handle_event({timeout, reconnect}, _, disconnected, Data=#data{client = undefined}) ->
+    ?LOG_INFO(#{what => reconnect}),
     try_connect(Data);
 
 handle_event(EventType, Content, State, Data) ->
