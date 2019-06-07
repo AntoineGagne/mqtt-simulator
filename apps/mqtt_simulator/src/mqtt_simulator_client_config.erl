@@ -33,7 +33,7 @@
 -export_type([config/0,
               data/0]).
 
--define(DEFAULT_RECONNECT_TIMEOUT, 60000).
+-define(DEFAULT_RECONNECT_TIMEOUT, 5000).
 
 %%%===================================================================
 %%% API
