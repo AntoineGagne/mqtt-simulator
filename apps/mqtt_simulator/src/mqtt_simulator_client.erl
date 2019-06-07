@@ -100,14 +100,36 @@ terminate(Reason, _, _) ->
 %%====================================================================
 
 try_connect(Data=#data{config = Config}) ->
-    Host = mqtt_simulator_client_config:host(Config),
-    Port = mqtt_simulator_client_config:port(Config),
-    ConnectionStatus = emqttc:start_link([{host, binary_to_list(Host)},
-                                          {port, Port},
-                                          {logger, {error_logger, none}},
-                                          {keepalive, 60},
-                                          {reconnect, false}]),
+    DefaultConfig = default_config(),
+    AdaptedConfig = to_mqttc_config(Config),
+    ConnectionStatus = emqttc:start_link(DefaultConfig ++ AdaptedConfig),
     handle_connection_status(ConnectionStatus, Data).
+
+default_config() ->
+    [{logger, {error_logger, none}},
+     {keepalive, 60},
+     {reconnect, false}].
+
+to_mqttc_config(Config) ->
+    lists:filtermap(fun (Fun) -> adapt_config(Fun, Config) end,
+                    [{host, fun mqtt_simulator_client_config:host/1},
+                     {port, fun mqtt_simulator_client_config:port/1},
+                     {username, fun mqtt_simulator_client_config:username/1},
+                     {password, fun mqtt_simulator_client_config:password/1}]).
+
+adapt_config({host, Fun}, Config) ->
+    {true, {host, binary_to_list(Fun(Config))}};
+adapt_config({port, Fun}, Config) ->
+    {true, {port, Fun(Config)}};
+adapt_config({username, Fun}, Config) ->
+    adapt_optional_field({username, Fun(Config)}, Config);
+adapt_config({password, Fun}, Config) ->
+    adapt_optional_field({password, Fun(Config)}, Config).
+
+adapt_optional_field({Field, {ok, Value}}, Config) ->
+    {true, [{Field, Value} | Config]};
+adapt_optional_field(_, _) ->
+    false.
 
 handle_connection_status({ok, Client}, Data) ->
     {next_state, disconnected, Data#data{client = Client}};
