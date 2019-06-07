@@ -17,7 +17,8 @@
 -define(SERVER, ?MODULE).
 
 -record(state, {sync_interval :: pos_integer(),
-                sync_timer :: reference()}).
+                sync_timer :: reference(),
+                configs_by_ids = #{} :: #{binary() := mqtt_simulator_client_config:config()}}).
 
 %%%===================================================================
 %%% API
@@ -42,7 +43,7 @@ init([SyncInterval]) ->
 
 handle_call({update_config, Configs}, _From, State) ->
     ok = lists:foreach(fun mqtt_simulator_clients_sup:start_client/1, Configs),
-    {reply, ok, State}.
+    {reply, ok, State#state{configs_by_ids = to_config_map(Configs)}}.
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
@@ -62,3 +63,10 @@ handle_info(Message, State) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+to_config_map(Configs) ->
+    F = fun (Config, ConfigsByIds) ->
+                Id = mqtt_simulator_client_config:id(Config),
+                ConfigsByIds#{Id => Config}
+        end,
+    lists:foldl(F, #{}, Configs).
