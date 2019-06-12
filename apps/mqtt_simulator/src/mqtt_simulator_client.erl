@@ -72,15 +72,16 @@ handle_event(info, {mqttc, _Client,  disconnected}, connected, Data=#data{client
 
 handle_event(info, {'EXIT', _Client,  _}, _,
              Data=#data{client = _Client, reconnect_timeout = ReconnectTimeout}) ->
-    Actions = [{{timeout, reconnect}, ReconnectTimeout, reconnect}, {{timeout, ping}, infinity, ping}],
+    Actions = [{{timeout, reconnect}, ReconnectTimeout, reconnect},
+               {{timeout, ping}, infinity, ping}],
     {next_state, disconnected, Data#data{client = undefined}, Actions};
 
 handle_event(info, Message, _State, _Data) ->
     ?LOG_WARNING(#{what => unexpected_message, payload => Message}),
     keep_state_and_data;
 
-handle_event({timeout, ping}, _, connected, #data{client = C}) ->
-    pong = emqttc:ping(C),
+handle_event({timeout, ping}, _, connected, #data{client = Client}) ->
+    pong = emqttc:ping(Client),
     {keep_state_and_data, {{timeout, ping}, ?PING_TIME_MILLISECONDS, ping}};
 
 handle_event({timeout, reconnect}, _, disconnected, Data=#data{client = undefined}) ->
