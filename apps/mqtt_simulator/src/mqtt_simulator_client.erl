@@ -123,13 +123,13 @@ adapt_config({host, Fun}, Config) ->
 adapt_config({port, Fun}, Config) ->
     {true, {port, Fun(Config)}};
 adapt_config({username, Fun}, Config) ->
-    adapt_optional_field({username, Fun(Config)}, Config);
+    adapt_optional_field({username, Fun(Config)});
 adapt_config({password, Fun}, Config) ->
-    adapt_optional_field({password, Fun(Config)}, Config).
+    adapt_optional_field({password, Fun(Config)}).
 
-adapt_optional_field({Field, {ok, Value}}, Config) ->
-    {true, [{Field, Value} | Config]};
-adapt_optional_field(_, _) ->
+adapt_optional_field({Field, {ok, Value}}) ->
+    {true, {Field, Value}};
+adapt_optional_field(_) ->
     false.
 
 handle_connection_status({ok, Client}, Data) ->
