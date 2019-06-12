@@ -106,7 +106,7 @@ try_connect(Data=#data{config = Config}) ->
     handle_connection_status(ConnectionStatus, Data).
 
 default_config() ->
-    [{logger, {error_logger, none}},
+    [{logger, none},
      {keepalive, 60},
      {reconnect, false}].
 

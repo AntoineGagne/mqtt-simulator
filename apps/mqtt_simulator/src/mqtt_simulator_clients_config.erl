@@ -15,10 +15,16 @@
          handle_info/2]).
 
 -define(SERVER, ?MODULE).
+-define(TABLE_NAME, mqtt_simulator_clients_config_ids_by_pids).
 
 -record(state, {sync_interval :: pos_integer(),
                 sync_timer :: reference(),
-                configs_by_ids = #{} :: #{binary() := mqtt_simulator_client_config:config()}}).
+                pids_by_ids = #{} :: #{binary() := pid()},
+                configs_by_ids = #{} :: configs_by_ids()}).
+-record(diff, {to_start = #{} :: configs_by_ids(),
+               to_stop = #{} :: configs_by_ids()}).
+
+-type configs_by_ids() :: #{binary() := mqtt_simulator_client_config:config()}.
 
 %%%===================================================================
 %%% API
@@ -37,24 +43,42 @@ update_config(Config) ->
 %%%===================================================================
 
 init([SyncInterval]) ->
+    process_flag(trap_exit, true),
     SyncTimer = erlang:start_timer(SyncInterval, self(), synchronize),
+    _ = ets:new(?TABLE_NAME, [set, named_table, private]),
     {ok, #state{sync_timer = SyncTimer,
                 sync_interval = SyncInterval}}.
 
 handle_call({update_config, Configs}, _From, State) ->
-    ok = lists:foreach(fun mqtt_simulator_clients_sup:start_client/1, Configs),
-    {reply, ok, State#state{configs_by_ids = to_config_map(Configs)}}.
+    NewConfigs = to_config_map(Configs),
+    Diff = diff(NewConfigs, State#state.configs_by_ids),
+    UpdatedState = apply_diff(Diff, State),
+    {reply, ok, UpdatedState#state{configs_by_ids = NewConfigs}}.
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
 handle_info({timeout, TimerRef, synchronize}, State=#state{sync_timer = TimerRef,
+                                                           configs_by_ids = ConfigsByIds,
+                                                           pids_by_ids = PidsByIds,
                                                            sync_interval = SyncInterval}) ->
+    Diff = diff(ConfigsByIds, PidsByIds),
+    UpdatedState = apply_diff(Diff, State),
     SyncTimer = erlang:start_timer(SyncInterval, self(), synchronize),
-    {noreply, State#state{sync_timer = SyncTimer}};
+    {noreply, UpdatedState#state{sync_timer = SyncTimer}};
 
 handle_info({timeout, _TimerRef, synchronize}, State) ->
     {noreply, State};
+
+handle_info({'EXIT', Pid, Reason}, State=#state{pids_by_ids = PidsByIds}) ->
+    ?LOG_INFO(#{what => process_exited, pid => Pid, reason => Reason}),
+    Predicate = fun ({_, Pid2}) -> Pid =:= Pid2 end,
+    case lists:search(Predicate, maps:to_list(PidsByIds)) of
+        {value, {Id, _}} ->
+            {noreply, State#state{pids_by_ids = maps:remove(Id, PidsByIds)}};
+        false ->
+            {noreply, State}
+    end;
 
 handle_info(Message, State) ->
     ?LOG_WARNING(#{what => unknown_message_received, message => Message}),
@@ -64,9 +88,45 @@ handle_info(Message, State) ->
 %%% Internal functions
 %%%===================================================================
 
+diff(Configs, PidsByIds) ->
+    Ids = maps:keys(Configs),
+    Started = maps:keys(PidsByIds),
+    ToStop = maps:without(Ids, PidsByIds),
+    ToStart = maps:without(Started, Configs),
+    #diff{to_stop = ToStop, to_start = ToStart}.
+
+apply_diff(#diff{to_stop = ToStop, to_start = ToStart}, State) ->
+    PidsByIds = maps:fold(fun stop/3, State#state.pids_by_ids, ToStop),
+    State#state{pids_by_ids = maps:fold(fun start/3, PidsByIds, ToStart)}.
+
 to_config_map(Configs) ->
     F = fun (Config, ConfigsByIds) ->
                 Id = mqtt_simulator_client_config:id(Config),
                 ConfigsByIds#{Id => Config}
         end,
     lists:foldl(F, #{}, Configs).
+
+stop(_, Config, PidsByIds) ->
+    Id = mqtt_simulator_client_config:id(Config),
+    case maps:take(Id, PidsByIds) of
+        {Pid, PidsByIds2} ->
+            true = unlink(Pid),
+            ok = mqtt_simulator_clients_sup:stop_client(Pid),
+            PidsByIds2;
+        error ->
+            PidsByIds
+    end.
+
+start(_, Config, PidsByIds) ->
+    case mqtt_simulator_clients_sup:start_client(Config) of
+        {ok, Pid} ->
+            Id = mqtt_simulator_client_config:id(Config),
+            %% When the configuration process dies, it must shutdown all the
+            %% clients so that they don't leak. Otherwise, since the
+            %% configurations are lost, there would be no way to know which
+            %% client are still alive except by putting an external process.
+            true = link(Pid),
+            PidsByIds#{Id => Pid};
+        _ ->
+            PidsByIds
+    end.

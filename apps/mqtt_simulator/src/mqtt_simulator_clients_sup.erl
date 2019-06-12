@@ -4,12 +4,14 @@
 
 %% API
 -export([start_link/0,
-         start_client/1]).
+         start_client/1,
+         stop_client/1]).
 
 %% Supervisor callbacks
 -export([init/1]).
 
 -define(SERVER, ?MODULE).
+-define(WHERE(Id), gproc:where({n, l, Id})).
 -define(CLIENT_SUP_ID(Id), {client_sup, Id}).
 
 -type child() :: undefined | pid().
@@ -27,6 +29,10 @@ start_link() ->
 start_client(Config) ->
     Id = mqtt_simulator_client_config:id(Config),
     supervisor:start_child(?SERVER, [?CLIENT_SUP_ID(Id), Config]).
+
+-spec stop_client(pid()) -> ok | {error, term()}.
+stop_client(Pid) ->
+    supervisor:terminate_child(?SERVER, Pid).
 
 %%====================================================================
 %% Supervisor callbacks
