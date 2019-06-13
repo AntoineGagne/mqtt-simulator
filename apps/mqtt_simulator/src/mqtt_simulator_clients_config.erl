@@ -72,7 +72,7 @@ handle_info({timeout, _TimerRef, synchronize}, State) ->
 
 handle_info({'EXIT', Pid, Reason}, State=#state{pids_by_ids = PidsByIds}) ->
     ?LOG_INFO(#{what => process_exited, pid => Pid, reason => Reason}),
-    Predicate = fun ({_, Pid2}) -> Pid =:= Pid2 end,
+    Predicate = fun ({_, {Pid2, _}}) -> Pid =:= Pid2 end,
     case lists:search(Predicate, maps:to_list(PidsByIds)) of
         {value, {Id, _}} ->
             {noreply, State#state{pids_by_ids = maps:remove(Id, PidsByIds)}};
@@ -109,8 +109,8 @@ to_config_map(Configs) ->
 stop(_, Config, PidsByIds) ->
     Id = mqtt_simulator_client_config:id(Config),
     case maps:take(Id, PidsByIds) of
-        {Pid, PidsByIds2} ->
-            true = unlink(Pid),
+        {{Pid, Ref}, PidsByIds2} ->
+            true = erlang:demonitor(Ref, [flush]),
             ok = mqtt_simulator_clients_sup:stop_client(Pid),
             PidsByIds2;
         error ->
@@ -121,12 +121,8 @@ start(_, Config, PidsByIds) ->
     case mqtt_simulator_clients_sup:start_client(Config) of
         {ok, Pid} ->
             Id = mqtt_simulator_client_config:id(Config),
-            %% When the configuration process dies, it must shutdown all the
-            %% clients so that they don't leak. Otherwise, since the
-            %% configurations are lost, there would be no way to know which
-            %% client are still alive except by putting an external process.
-            true = link(Pid),
-            PidsByIds#{Id => Pid};
+            Ref = erlang:monitor(process, Pid),
+            PidsByIds#{Id => {Pid, Ref}};
         _ ->
             PidsByIds
     end.

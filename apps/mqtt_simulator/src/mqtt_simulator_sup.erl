@@ -31,22 +31,23 @@ start_link() ->
 
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    {ok, {#{strategy => one_for_one,
+    {ok, {#{strategy => one_for_all,
             intensity => 5,
             period => 10},
-          [#{id => mqtt_simulator_clients_config,
+          [#{id => mqtt_simulator_clients_sup,
+             start => {mqtt_simulator_clients_sup, start_link, []},
+             restart => permanent,
+             shutdown => 5000,
+             type => worker,
+             modules => [mqtt_simulator_clients_sup]},
+           #{id => mqtt_simulator_clients_config,
              start => {mqtt_simulator_clients_config, start_link,
                        [?DEFAULT_SYNCHRONIZATION_INTERVAL]},
              restart => permanent,
              shutdown => 5000,
              type => worker,
-             modules => [mqtt_simulator_clients_config]},
-           #{id => mqtt_simulator_clients_sup,
-             start => {mqtt_simulator_clients_sup, start_link, []},
-             restart => permanent,
-             shutdown => 5000,
-             type => worker,
-             modules => [mqtt_simulator_clients_sup]}]}}.
+             modules => [mqtt_simulator_clients_config]}
+          ]}}.
 
 %%====================================================================
 %% Internal functions
