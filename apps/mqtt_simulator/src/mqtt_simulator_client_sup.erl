@@ -48,7 +48,7 @@ init([Config]) ->
              restart => permanent,
              shutdown => 5000,
              type => worker,
-             modules => [mqtt_simulator_data_simulators_sup]},
+             modules => [mqtt_simulator_data_simulators_config]},
            #{id => mqtt_simulator_client,
              start => {mqtt_simulator_client, start_link, [ClientId, ConfigId, Config]},
              restart => permanent,
