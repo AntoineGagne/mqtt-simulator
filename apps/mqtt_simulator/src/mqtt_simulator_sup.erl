@@ -38,7 +38,7 @@ init([]) ->
              start => {mqtt_simulator_clients_sup, start_link, []},
              restart => permanent,
              shutdown => 5000,
-             type => worker,
+             type => supervisor,
              modules => [mqtt_simulator_clients_sup]},
            #{id => mqtt_simulator_clients_config,
              start => {mqtt_simulator_clients_config, start_link,
