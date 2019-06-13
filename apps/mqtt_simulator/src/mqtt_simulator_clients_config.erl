@@ -106,8 +106,7 @@ to_config_map(Configs) ->
         end,
     lists:foldl(F, #{}, Configs).
 
-stop(_, Config, PidsByIds) ->
-    Id = mqtt_simulator_client_config:id(Config),
+stop(Id, _, PidsByIds) ->
     case maps:take(Id, PidsByIds) of
         {{Pid, Ref}, PidsByIds2} ->
             true = erlang:demonitor(Ref, [flush]),
@@ -117,10 +116,9 @@ stop(_, Config, PidsByIds) ->
             PidsByIds
     end.
 
-start(_, Config, PidsByIds) ->
+start(Id, Config, PidsByIds) ->
     case mqtt_simulator_clients_sup:start_client(Config) of
         {ok, Pid} ->
-            Id = mqtt_simulator_client_config:id(Config),
             Ref = erlang:monitor(process, Pid),
             PidsByIds#{Id => {Pid, Ref}};
         _ ->
