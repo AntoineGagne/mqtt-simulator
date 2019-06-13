@@ -45,7 +45,6 @@ update_config(Config) ->
 init([SyncInterval]) ->
     process_flag(trap_exit, true),
     SyncTimer = erlang:start_timer(SyncInterval, self(), synchronize),
-    _ = ets:new(?TABLE_NAME, [set, named_table, private]),
     {ok, #state{sync_timer = SyncTimer,
                 sync_interval = SyncInterval}}.
 
@@ -70,7 +69,7 @@ handle_info({timeout, TimerRef, synchronize}, State=#state{sync_timer = TimerRef
 handle_info({timeout, _TimerRef, synchronize}, State) ->
     {noreply, State};
 
-handle_info({'EXIT', Pid, Reason}, State=#state{pids_by_ids = PidsByIds}) ->
+handle_info({'DOWN', _Ref, process, Pid, Reason}, State=#state{pids_by_ids = PidsByIds}) ->
     ?LOG_INFO(#{what => process_exited, pid => Pid, reason => Reason}),
     Predicate = fun ({_, {Pid2, _}}) -> Pid =:= Pid2 end,
     case lists:search(Predicate, maps:to_list(PidsByIds)) of

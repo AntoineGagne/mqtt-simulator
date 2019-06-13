@@ -4,7 +4,8 @@
 
 %% API
 -export([start_link/2,
-         update_config/2]).
+         start_data_simulator/2,
+         stop_data_simulator/2]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -21,9 +22,12 @@
 start_link(Id, ClientId) ->
         supervisor:start_link(?VIA_GPROC(Id), ?MODULE, [ClientId]).
 
-update_config(Id, DataPoint) ->
+start_data_simulator(Id, DataPoint) ->
     #{id := DataPointId} = DataPoint,
     supervisor:start_child(?VIA_GPROC(Id), [?DATA_SIMULATOR_ID(DataPointId), DataPoint]).
+
+stop_data_simulator(Id, Pid) ->
+    supervisor:terminate_child(?VIA_GPROC(Id), Pid).
 
 %%%===================================================================
 %%% supervisor callbacks
@@ -35,7 +39,7 @@ init([ClientId]) ->
             period => 10},
           [#{id => mqtt_simulator_data_simulator,
              start => {mqtt_simulator_data_simulator, start_link, [ClientId]},
-             restart => transient,
+             restart => temporary,
              shutdown => 5000,
              type => worker,
              modules => [mqtt_simulator_data_simulator]}]}}.
