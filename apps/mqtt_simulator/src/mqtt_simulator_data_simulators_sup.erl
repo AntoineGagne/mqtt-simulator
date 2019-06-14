@@ -12,7 +12,6 @@
 
 -define(DATA_SIMULATOR_ID(Id), {data_simulator, Id}).
 -define(VIA_GPROC(Id), {via, gproc, {n, l, Id}}).
--define(SERVER, ?MODULE).
 
 %%%===================================================================
 %%% API
