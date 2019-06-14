@@ -1,0 +1,7 @@
+_build/
+_checkouts/
+.git
+.gitignore
+.editorconfig
+node_modules/
+Dockerfile
