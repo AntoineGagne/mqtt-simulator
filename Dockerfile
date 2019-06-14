@@ -1,4 +1,5 @@
-FROM erlang:21 as erlang-build
+FROM erlang:21-alpine as erlang-build
+RUN apk add --no-cache git=2.20.1-r0
 WORKDIR /mqtt_simulator
 COPY rebar.config rebar.lock /mqtt_simulator/
 RUN rebar3 compile
@@ -6,7 +7,6 @@ COPY . /mqtt_simulator
 RUN rebar3 as prod tar -n mqtt_simulator -o /opt
 
 FROM alpine:3.9
-
 RUN apk add --no-cache \
     musl=1.1.20-r4 \
     libcrypto1.1=1.1.1b-r1 \
@@ -14,7 +14,6 @@ RUN apk add --no-cache \
     unixodbc=2.3.7-r0 \
     libcurl=7.64.0-r1 \
     libuuid=2.33-r0
-
 # hadolint ignore=DL3010
 COPY --from=erlang-build /opt/mqtt_simulator/mqtt_simulator-0.1.0.tar.gz /opt
 RUN set -e \

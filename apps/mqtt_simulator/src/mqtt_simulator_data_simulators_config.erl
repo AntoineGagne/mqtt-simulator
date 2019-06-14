@@ -1,12 +1,12 @@
--module(mqtt_simulator_clients_config).
+-module(mqtt_simulator_data_simulators_config).
 
 -include_lib("kernel/include/logger.hrl").
 
 -behaviour(gen_server).
 
 %% API
--export([start_link/1,
-         update_config/1]).
+-export([start_link/3,
+         update_config/2]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -14,45 +14,49 @@
          handle_cast/2,
          handle_info/2]).
 
--define(SERVER, ?MODULE).
--define(TABLE_NAME, mqtt_simulator_clients_config_ids_by_pids).
+-define(VIA_GPROC(Id), {via, gproc, {n, l, Id}}).
 
--record(state, {sync_interval :: pos_integer(),
+-record(state, {data_simulator_sup_id :: term(),
+                sync_interval :: pos_integer(),
                 sync_timer :: reference(),
                 pids_by_ids = #{} :: #{binary() := pid()},
                 configs_by_ids = #{} :: configs_by_ids()}).
 -record(diff, {to_start = #{} :: configs_by_ids(),
                to_stop = #{} :: configs_by_ids()}).
 
--type configs_by_ids() :: #{binary() := mqtt_simulator_client_config:config()}.
+-type configs_by_ids() :: #{binary() := mqtt_simulator_client_config:data()}.
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
--spec start_link(pos_integer()) -> {ok, pid()} | ignore | {error, term()}.
-start_link(SyncInterval) ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [SyncInterval], []).
+-spec start_link(term(), term(), pos_integer()) -> {ok, pid()} | ignore | {error, term()}.
+start_link(Id, SupId, SyncInterval) ->
+    gen_server:start_link(?VIA_GPROC(Id), ?MODULE, [SupId, SyncInterval], []).
 
--spec update_config([mqtt_simulator_client_config:config()]) -> ok.
-update_config(Config) ->
-    gen_server:call(?SERVER, {update_config, Config}).
+-spec update_config(term(), [mqtt_simulator_client_config:data()]) -> ok.
+update_config(Id, Config) ->
+    gen_server:cast(?VIA_GPROC(Id), {update_config, Config}).
 
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
 
-init([SyncInterval]) ->
+init([SupId, SyncInterval]) ->
     process_flag(trap_exit, true),
     SyncTimer = erlang:start_timer(SyncInterval, self(), synchronize),
-    {ok, #state{sync_timer = SyncTimer,
-                sync_interval = SyncInterval}}.
+    {ok, #state{data_simulator_sup_id = SupId,
+                sync_interval = SyncInterval,
+                sync_timer = SyncTimer}}.
 
-handle_call({update_config, Configs}, _From, State) ->
+handle_call(_Request, _From, State) ->
+    {reply, ok, State}.
+
+handle_cast({update_config, Configs}, State) ->
     NewConfigs = to_config_map(Configs),
     Diff = diff(NewConfigs, State#state.configs_by_ids),
     UpdatedState = apply_diff(Diff, State),
-    {reply, ok, UpdatedState#state{configs_by_ids = NewConfigs}}.
+    {noreply, UpdatedState#state{configs_by_ids = NewConfigs}};
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
@@ -95,8 +99,8 @@ diff(Configs, PidsByIds) ->
     #diff{to_stop = ToStop, to_start = ToStart}.
 
 apply_diff(#diff{to_stop = ToStop, to_start = ToStart}, State) ->
-    PidsByIds = maps:fold(fun stop/3, State#state.pids_by_ids, ToStop),
-    State#state{pids_by_ids = maps:fold(fun start/3, PidsByIds, ToStart)}.
+    PidsByIds = maps:fold(stop(State), State#state.pids_by_ids, ToStop),
+    State#state{pids_by_ids = maps:fold(start(State), PidsByIds, ToStart)}.
 
 to_config_map(Configs) ->
     F = fun (Config, ConfigsByIds) ->
@@ -105,21 +109,25 @@ to_config_map(Configs) ->
         end,
     lists:foldl(F, #{}, Configs).
 
-stop(Id, _, PidsByIds) ->
-    case maps:take(Id, PidsByIds) of
-        {{Pid, Ref}, PidsByIds2} ->
-            true = erlang:demonitor(Ref, [flush]),
-            ok = mqtt_simulator_clients_sup:stop_client(Pid),
-            PidsByIds2;
-        error ->
-            PidsByIds
+stop(#state{data_simulator_sup_id = SupId}) ->
+    fun (Id, _, PidsByIds) ->
+            case maps:take(Id, PidsByIds) of
+                {{Pid, Ref}, PidsByIds2} ->
+                    true = erlang:demonitor(Ref, [flush]),
+                    ok = mqtt_simulator_data_simulators_sup:stop_data_simulator(SupId, Pid),
+                    PidsByIds2;
+                error ->
+                    PidsByIds
+            end
     end.
 
-start(Id, Config, PidsByIds) ->
-    case mqtt_simulator_clients_sup:start_client(Config) of
-        {ok, Pid} ->
-            Ref = erlang:monitor(process, Pid),
-            PidsByIds#{Id => {Pid, Ref}};
-        _ ->
-            PidsByIds
+start(#state{data_simulator_sup_id = SupId}) ->
+    fun (Id, DataPoint, PidsByIds) ->
+            case mqtt_simulator_data_simulators_sup:start_data_simulator(SupId, DataPoint) of
+                {ok, Pid} ->
+                    Ref = erlang:monitor(process, Pid),
+                    PidsByIds#{Id => {Pid, Ref}};
+                _ ->
+                    PidsByIds
+            end
     end.
