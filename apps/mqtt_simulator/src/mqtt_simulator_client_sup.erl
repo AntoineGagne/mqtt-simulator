@@ -12,7 +12,7 @@
 -define(CLIENT_ID(Id), {client, Id}).
 -define(SUP_ID(Id), {data_simulator_sup_id, Id}).
 -define(CONFIG_ID(Id), {data_simulator_config_id, Id}).
--define(SERVER, ?MODULE).
+-define(DEFAULT_SYNCHRONIZATION_INTERVAL, 60000).
 
 %%====================================================================
 %% API functions
@@ -44,7 +44,7 @@ init([Config]) ->
              modules => [mqtt_simulator_data_simulators_sup]},
            #{id => mqtt_simulator_data_simulators_config,
              start => {mqtt_simulator_data_simulators_config, start_link,
-                       [ConfigId, SupId]},
+                       [ConfigId, SupId, ?DEFAULT_SYNCHRONIZATION_INTERVAL]},
              restart => permanent,
              shutdown => 5000,
              type => worker,

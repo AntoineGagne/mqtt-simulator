@@ -5,7 +5,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/2,
+-export([start_link/3,
          update_config/2]).
 
 %% gen_server callbacks
@@ -15,11 +15,9 @@
          handle_info/2]).
 
 -define(VIA_GPROC(Id), {via, gproc, {n, l, Id}}).
--define(SERVER, ?MODULE).
--define(DEFAULT_SYNCHRONIZATION_INTERVAL, 60000).
 
 -record(state, {data_simulator_sup_id :: term(),
-                sync_interval = ?DEFAULT_SYNCHRONIZATION_INTERVAL :: pos_integer(),
+                sync_interval :: pos_integer(),
                 sync_timer :: reference(),
                 pids_by_ids = #{} :: #{binary() := pid()},
                 configs_by_ids = #{} :: configs_by_ids()}).
@@ -32,9 +30,9 @@
 %%% API
 %%%===================================================================
 
--spec start_link(term(), term()) -> {ok, pid()} | ignore | {error, term()}.
-start_link(Id, SupId) ->
-    gen_server:start_link(?VIA_GPROC(Id), ?MODULE, [SupId], []).
+-spec start_link(term(), term(), pos_integer()) -> {ok, pid()} | ignore | {error, term()}.
+start_link(Id, SupId, SyncInterval) ->
+    gen_server:start_link(?VIA_GPROC(Id), ?MODULE, [SupId, SyncInterval], []).
 
 -spec update_config(term(), [mqtt_simulator_client_config:data()]) -> ok.
 update_config(Id, Config) ->
@@ -44,10 +42,11 @@ update_config(Id, Config) ->
 %%% gen_server callbacks
 %%%===================================================================
 
-init([SupId]) ->
+init([SupId, SyncInterval]) ->
     process_flag(trap_exit, true),
-    SyncTimer = erlang:start_timer(?DEFAULT_SYNCHRONIZATION_INTERVAL, self(), synchronize),
+    SyncTimer = erlang:start_timer(SyncInterval, self(), synchronize),
     {ok, #state{data_simulator_sup_id = SupId,
+                sync_interval = SyncInterval,
                 sync_timer = SyncTimer}}.
 
 handle_call(_Request, _From, State) ->

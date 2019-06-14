@@ -58,7 +58,6 @@ restart_crashed_clients() ->
 restart_crashed_clients(Config) ->
     Pid = ?config(pid, Config),
     unlink(Pid),
-    meck:expect(mqtt_simulator_clients_sup, start_client, fun (_) -> {error, error} end),
     {ok, _} = mqtt_simulator_clients_config:start_link(?SYNC_INTERVAL),
     mqtt_simulator_clients_config:update_config([?A_CONFIG]),
     meck:wait(mqtt_simulator_clients_sup, start_client, ['_'], ?TIMEOUT),
