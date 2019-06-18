@@ -41,7 +41,7 @@
 
 -spec init() -> config().
 init() ->
-    #{id => <<"">>,
+    #{id => uuid:uuid_to_string(uuid:get_v4(), binary_standard),
       host => <<"">>,
       port => 0,
       reconnect_timeout => ?DEFAULT_RECONNECT_TIMEOUT,

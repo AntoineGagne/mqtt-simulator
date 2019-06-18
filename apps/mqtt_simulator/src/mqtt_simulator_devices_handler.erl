@@ -35,6 +35,10 @@ fetch(Request, State) ->
 init(Request, State) ->
     {cowboy_rest, Request, State}.
 
+malformed_request(Request=#{method := <<"POST">>}, State) ->
+    {false, Request, State};
+malformed_request(Request=#{method := <<"PUT">>}, State) ->
+    {false, Request, State};
 malformed_request(Request, State) ->
     {false, Request, State}.
 
