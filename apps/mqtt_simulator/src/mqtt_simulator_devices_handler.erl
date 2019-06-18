@@ -1,4 +1,4 @@
--module(devices_handler).
+-module(mqtt_simulator_devices_handler).
 
 -include_lib("kernel/include/logger.hrl").
 

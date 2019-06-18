@@ -32,8 +32,8 @@ start_link() ->
 init([]) ->
     process_flag(trap_exit, true),
     Port = application:get_env(mqtt_simulator, api_port, ?DEFAULT_PORT),
-    Routes = [{"/devices/", devices_handler, []},
-              {"/devices/:id", [{id, int}], devices_handler, []}],
+    Routes = [{"/devices/", mqtt_simulator_devices_handler, []},
+              {"/devices/:id", [{id, int}], mqtt_simulator_devices_handler, []}],
     Dispatch = cowboy_router:compile([{'_', Routes}]),
     {ok, _} = cowboy:start_clear(?SERVER,
                                  [{port, Port}],
