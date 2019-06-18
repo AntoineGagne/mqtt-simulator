@@ -76,7 +76,7 @@ do_parse_data(Data, _) ->
 
 parse_data_field(_, _, Error={error, _}) ->
     Error;
-parse_data_field(<<"values">>, V, Acc) when is_binary(V) ->
+parse_data_field(<<"values">>, V, Acc) when is_list(V) ->
     Acc#{values => V};
 parse_data_field(<<"interval">>, V, Acc) when is_integer(V) ->
     Acc#{interval => V};
