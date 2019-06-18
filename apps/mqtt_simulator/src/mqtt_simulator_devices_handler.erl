@@ -59,7 +59,17 @@ content_types_accepted(Request, State) ->
 
 update_configs(Request, Configs) ->
     ?LOG_INFO(#{what => update_configs, configs => Configs}),
-    {true, Request, Configs}.
+    Parsed = lists:foldl(fun parse_config/2, [], Configs),
+    ok = mqtt_simulator_clients_config:update_config(Parsed),
+    {true, Request, Parsed}.
+
+parse_config(_, Error={error, _}) ->
+    Error;
+parse_config(Config, Configs) ->
+    case mqtt_simulator_config_parser:parse(Config) of
+        {ok, Parsed} -> [Parsed | Configs];
+        Error -> Error
+    end.
 
 update_config(Request, Config) ->
     ?LOG_INFO(#{what => update_config, configs => Config}),
