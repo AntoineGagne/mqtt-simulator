@@ -10,8 +10,7 @@
          handle_call/3,
          handle_cast/2,
          handle_info/2,
-         terminate/2,
-         code_change/3]).
+         terminate/2]).
 
 -define(SERVER, ?MODULE).
 -define(DEFAULT_PORT, 8000).
@@ -54,9 +53,6 @@ handle_info(_Info, State) ->
 
 terminate(_Reason, _State) ->
     cowboy:stop_listener(?SERVER).
-
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
 
 %%%===================================================================
 %%% Internal functions
