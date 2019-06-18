@@ -1,5 +1,7 @@
 -module(mqtt_simulator_config_parser).
 
+-include_lib("kernel/include/logger.hrl").
+
 %% API
 -export([parse/1]).
 
@@ -7,26 +9,20 @@
 %%% API
 %%%===================================================================
 
--spec parse(binary()) -> {ok, mqtt_simulator_client_config:config()}.
+-spec parse(term()) -> {ok, mqtt_simulator_client_config:config()}.
 parse(Raw) ->
-    MaybeDecoded = jsone:try_decode(Raw),
-    maybe_parse(MaybeDecoded).
+    Parsed = maps:fold(fun parse_connection_info/3, #{}, Raw),
+    Validated = do_validate_keys(connection_info_mandatory_keys(), Parsed),
+    to_config(Validated).
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
 
-maybe_parse({ok, Decoded, _}) ->
-    Parsed = maps:fold(fun parse_connection_info/3, #{}, Decoded),
-    Validated = do_validate_keys(connection_info_mandatory_keys(), Parsed),
-    to_config(Validated);
-maybe_parse(Error) ->
-    Error.
-
 to_config(Error={error, _}) ->
     Error;
 to_config(Parsed) ->
-    Config = map:fold(fun to_config/3, mqtt_simulator_client_config:init(), Parsed),
+    Config = maps:fold(fun to_config/3, mqtt_simulator_client_config:init(), Parsed),
     {ok, Config}.
 
 to_config(host, V, Config) ->
