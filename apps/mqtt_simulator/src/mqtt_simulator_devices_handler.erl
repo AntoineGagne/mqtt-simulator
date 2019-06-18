@@ -35,10 +35,17 @@ fetch(Request, State) ->
 init(Request, State) ->
     {cowboy_rest, Request, State}.
 
-malformed_request(Request=#{method := <<"POST">>}, State) ->
-    {false, Request, State};
-malformed_request(Request=#{method := <<"PUT">>}, State) ->
-    {false, Request, State};
+malformed_request(Request=#{method := <<"POST">>}, _State) ->
+    {ok, Body, Request2} = cowboy_req:read_body(Request),
+    MaybeDecoded = jsone:try_decode(Body),
+    Parser = fun (Decoded) -> lists:foldl(fun parse_config/2, {ok, []}, Decoded) end,
+    Result = maybe_parse_body(MaybeDecoded, Parser),
+    handle_parse_result(Result, Request2);
+malformed_request(Request=#{method := <<"PUT">>}, _State) ->
+    {ok, Body, Request2} = cowboy_req:read_body(Request),
+    MaybeDecoded = jsone:try_decode(Body),
+    Result = maybe_parse_body(MaybeDecoded, fun mqtt_simulator_config_parser:parse/1),
+    handle_parse_result(Result, Request2);
 malformed_request(Request, State) ->
     {false, Request, State}.
 
@@ -61,20 +68,30 @@ content_types_accepted(Request, State) ->
 %%% Internal functions
 %%%===================================================================
 
-update_configs(Request, Configs) ->
-    ?LOG_INFO(#{what => update_configs, configs => Configs}),
-    Parsed = lists:foldl(fun parse_config/2, [], Configs),
-    ok = mqtt_simulator_clients_config:update_config(Parsed),
-    {true, Request, Parsed}.
+maybe_parse_body({ok, Decoded, _}, Parser) ->
+    Parser(Decoded);
+maybe_parse_body(Error={error, _}, _) ->
+    Error.
+
+handle_parse_result(Result={ok, _}, Request) ->
+    {false, Request, Result};
+handle_parse_result(Reason={error, _}, Request=#{method := Method}) ->
+    ?LOG_ERROR(#{what => malformed_request, reason => Reason, method => Method}),
+    {true, Request, Reason}.
+
+update_configs(Request, {ok, Configs}) ->
+    ?LOG_DEBUG(#{what => update_configs, configs => Configs}),
+    ok = mqtt_simulator_clients_config:update_config(Configs),
+    {true, Request, Configs}.
 
 parse_config(_, Error={error, _}) ->
     Error;
-parse_config(Config, Configs) ->
+parse_config(Config, {ok, Configs}) ->
     case mqtt_simulator_config_parser:parse(Config) of
-        {ok, Parsed} -> [Parsed | Configs];
+        {ok, Parsed} -> {ok, [Parsed | Configs]};
         Error -> Error
     end.
 
 update_config(Request, Config) ->
-    ?LOG_INFO(#{what => update_config, configs => Config}),
+    ?LOG_DEBUG(#{what => update_config, configs => Config}),
     {true, Request, Config}.
