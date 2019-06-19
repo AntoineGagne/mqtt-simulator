@@ -10,10 +10,12 @@
 %%%===================================================================
 
 -spec parse(term()) -> {ok, mqtt_simulator_client_config:config()}.
-parse(Raw) ->
+parse(Raw) when is_map(Raw) ->
     Parsed = maps:fold(fun parse_connection_info/3, #{}, Raw),
     Validated = do_validate_keys(connection_info_mandatory_keys(), Parsed),
-    to_config(Validated).
+    to_config(Validated);
+parse(_) ->
+    {error, {invalid_format, not_map}}.
 
 %%%===================================================================
 %%% Internal functions

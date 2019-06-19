@@ -38,8 +38,7 @@ init(Request, State) ->
 malformed_request(Request=#{method := <<"POST">>}, _State) ->
     {ok, Body, Request2} = cowboy_req:read_body(Request),
     MaybeDecoded = jsone:try_decode(Body),
-    Parser = fun (Decoded) -> lists:foldl(fun parse_config/2, {ok, []}, Decoded) end,
-    Result = maybe_parse_body(MaybeDecoded, Parser),
+    Result = maybe_parse_body(MaybeDecoded, fun parse_configs/1),
     handle_parse_result(Result, Request2);
 malformed_request(Request=#{method := <<"PUT">>}, _State) ->
     {ok, Body, Request2} = cowboy_req:read_body(Request),
@@ -83,6 +82,11 @@ update_configs(Request, {ok, Configs}) ->
     ?LOG_DEBUG(#{what => update_configs, configs => Configs}),
     ok = mqtt_simulator_clients_config:update_config(Configs),
     {true, Request, Configs}.
+
+parse_configs(Decoded) when is_list(Decoded) ->
+    lists:foldl(fun parse_config/2, {ok, []}, Decoded);
+parse_configs(_) ->
+    {error, invalid_format}.
 
 parse_config(_, Error={error, _}) ->
     Error;
