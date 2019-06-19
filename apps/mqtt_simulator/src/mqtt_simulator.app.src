@@ -9,7 +9,8 @@
     gproc,
     emqttc,
     cowboy,
-    jsone
+    jsone,
+    uuid
    ]},
   {env,[]},
   {modules, []},

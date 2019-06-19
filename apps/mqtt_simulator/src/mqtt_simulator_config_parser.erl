@@ -9,7 +9,7 @@
 %%% API
 %%%===================================================================
 
--spec parse(term()) -> {ok, mqtt_simulator_client_config:config()}.
+-spec parse(term()) -> {ok, mqtt_simulator_client_config:config()} | {error, term()}.
 parse(Raw) when is_map(Raw) ->
     Parsed = maps:fold(fun parse_connection_info/3, #{}, Raw),
     Validated = do_validate_keys(connection_info_mandatory_keys(), Parsed),
