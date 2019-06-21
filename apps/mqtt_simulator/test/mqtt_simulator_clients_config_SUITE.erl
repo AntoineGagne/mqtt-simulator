@@ -37,9 +37,9 @@ stop_client_on_new_config_without_client(Config) ->
     Pid = ?config(pid, Config),
     unlink(Pid),
     {ok, _} = mqtt_simulator_clients_config:start_link(?SYNC_INTERVAL),
-    mqtt_simulator_clients_config:update_config([?A_CONFIG]),
+    mqtt_simulator_clients_config:update_configs([?A_CONFIG]),
 
-    mqtt_simulator_clients_config:update_config([?ANOTHER_CONFIG]),
+    mqtt_simulator_clients_config:update_configs([?ANOTHER_CONFIG]),
 
     meck:wait(mqtt_simulator_clients_sup, stop_client, ['_'], ?TIMEOUT).
 
@@ -49,7 +49,7 @@ start_client_on_new_config() ->
 start_client_on_new_config(_Config) ->
     {ok, _} = mqtt_simulator_clients_config:start_link(?SYNC_INTERVAL),
 
-    mqtt_simulator_clients_config:update_config([?A_CONFIG]),
+    mqtt_simulator_clients_config:update_configs([?A_CONFIG]),
 
     meck:wait(mqtt_simulator_clients_sup, start_client, ['_'], ?TIMEOUT).
 
@@ -59,7 +59,7 @@ restart_crashed_clients(Config) ->
     Pid = ?config(pid, Config),
     unlink(Pid),
     {ok, _} = mqtt_simulator_clients_config:start_link(?SYNC_INTERVAL),
-    mqtt_simulator_clients_config:update_config([?A_CONFIG]),
+    mqtt_simulator_clients_config:update_configs([?A_CONFIG]),
     meck:wait(mqtt_simulator_clients_sup, start_client, ['_'], ?TIMEOUT),
 
     exit(Pid, kill),

@@ -6,7 +6,8 @@
 
 %% API
 -export([start_link/1,
-         update_config/1]).
+         update_config/1,
+         update_configs/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -34,9 +35,13 @@
 start_link(SyncInterval) ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [SyncInterval], []).
 
--spec update_config([mqtt_simulator_client_config:config()]) -> ok.
+-spec update_config(mqtt_simulator_client_config:config()) -> ok.
 update_config(Config) ->
     gen_server:call(?SERVER, {update_config, Config}).
+
+-spec update_configs([mqtt_simulator_client_config:config()]) -> ok.
+update_configs(Configs) ->
+    gen_server:call(?SERVER, {update_configs, Configs}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -48,7 +53,12 @@ init([SyncInterval]) ->
     {ok, #state{sync_timer = SyncTimer,
                 sync_interval = SyncInterval}}.
 
-handle_call({update_config, Configs}, _From, State) ->
+handle_call({update_config, Id, Config}, _From, State) ->
+    Result = mqtt_simulator_clients_sup:update_client(Config),
+    State2 = handle_client_update(Result, Config, State),
+    {noreply, Result, State2};
+
+handle_call({update_configs, Configs}, _From, State) ->
     NewConfigs = to_config_map(Configs),
     Diff = diff(NewConfigs, State#state.configs_by_ids),
     UpdatedState = apply_diff(Diff, State),
@@ -104,6 +114,15 @@ to_config_map(Configs) ->
                 ConfigsByIds#{Id => Config}
         end,
     lists:foldl(F, #{}, Configs).
+
+handle_client_update(ok, Config, State=#state{configs_by_ids = ConfigsByIds}) ->
+    Id = mqtt_simulator_client_config:id(Config),
+    UpdatedConfigsById = ConfigsByIds#{Id => Config},
+    State#state{configs_by_ids = UpdatedConfigsById};
+handle_client_update(Error, Config, State) ->
+    Id = mqtt_simulator_client_config:id(Config),
+    ?LOG_ERROR(#{what => update_config_failed, id => Id, reason => Error}),
+    State.
 
 stop(Id, _, PidsByIds) ->
     case maps:take(Id, PidsByIds) of

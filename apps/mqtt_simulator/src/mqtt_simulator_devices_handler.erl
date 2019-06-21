@@ -80,7 +80,7 @@ handle_parse_result(Reason={error, _}, Request=#{method := Method}) ->
 
 update_configs(Request, {ok, Configs}) ->
     ?LOG_DEBUG(#{what => update_configs, configs => Configs}),
-    ok = mqtt_simulator_clients_config:update_config(Configs),
+    ok = mqtt_simulator_clients_config:update_configs(Configs),
     {true, Request, Configs}.
 
 parse_configs(Decoded) when is_list(Decoded) ->

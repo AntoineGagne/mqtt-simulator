@@ -5,6 +5,7 @@
 -behavior(gen_statem).
 
 -export([start_link/3,
+         update_config/2,
          publish/3]).
 
 -export([callback_mode/0,
@@ -29,6 +30,9 @@
     {ok, pid()} | {error, term()} | ignore.
 start_link(Id, ConfigId, Config) ->
     gen_statem:start_link(?VIA_GPROC(Id), ?MODULE, [ConfigId, Config], []).
+
+update_config(Id, Config) ->
+    gen_statem:cast(?VIA_GPROC(Id), {update_config, Config}).
 
 -spec publish(term(), binary(), binary()) -> ok.
 publish(Id, Topic, Payload) ->
