@@ -53,6 +53,12 @@ init([ConfigId, Config]) ->
                              config = Config,
                              reconnect_timeout = ReconnectTimeout}}.
 
+handle_event(cast, {update_config, Config}, State, Data) ->
+    ?LOG_INFO(#{what => update_config, id => mqtt_simulator_client_config:id(Config),
+                state => State}),
+    % TODO: Close MQTT connection
+    try_connect(Data#data{config = Config});
+
 handle_event(cast, {publish, Topic, Payload}, connected, #data{client = Client}) ->
     emqttc:publish(Client, Topic, Payload),
     keep_state_and_data;
