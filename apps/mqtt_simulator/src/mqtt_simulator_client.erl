@@ -44,10 +44,10 @@ callback_mode() ->
 init([ConfigId, Config]) ->
     process_flag(trap_exit, true),
     ReconnectTimeout = mqtt_simulator_client_config:reconnect_timeout(Config),
-    self() ! connect,
+    NextEvent = {next_event, internal, connect},
     {ok, disconnected, #data{config_id = ConfigId,
                              config = Config,
-                             reconnect_timeout = ReconnectTimeout}}.
+                             reconnect_timeout = ReconnectTimeout}, NextEvent}.
 
 handle_event(cast, {publish, Topic, Payload}, connected, #data{client = Client}) ->
     emqttc:publish(Client, Topic, Payload),
@@ -57,7 +57,7 @@ handle_event(cast, {publish, Topic, Payload}, disconnected, _Data) ->
                    reason => disconnected}),
     keep_state_and_data;
 
-handle_event(info, connect, disconnected, Data=#data{config = Config, config_id = ConfigId}) ->
+handle_event(internal, connect, disconnected, Data=#data{config = Config, config_id = ConfigId}) ->
     DataPoints = mqtt_simulator_client_config:data(Config),
     ok = mqtt_simulator_data_simulators_config:update_config(ConfigId, DataPoints),
     try_connect(Data);
