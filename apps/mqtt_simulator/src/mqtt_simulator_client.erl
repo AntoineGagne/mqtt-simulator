@@ -56,8 +56,8 @@ init([ConfigId, Config]) ->
 handle_event(cast, {update_config, Config}, State, Data) ->
     ?LOG_INFO(#{what => update_config, id => mqtt_simulator_client_config:id(Config),
                 state => State}),
-    % TODO: Close MQTT connection
-    try_connect(Data#data{config = Config});
+    UpdatedData = maybe_close_connection(Data),
+    try_connect(UpdatedData#data{config = Config});
 
 handle_event(cast, {publish, Topic, Payload}, connected, #data{client = Client}) ->
     emqttc:publish(Client, Topic, Payload),
@@ -109,6 +109,12 @@ terminate(Reason, _, _) ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
+
+maybe_close_connection(Data=#data{client = undefined}) ->
+    Data;
+maybe_close_connection(Data=#data{client = Client}) ->
+    ok = emqttc:disconnect(Client),
+    Data#data{client = undefined}.
 
 try_connect(Data=#data{config = Config}) ->
     DefaultConfig = default_config(),

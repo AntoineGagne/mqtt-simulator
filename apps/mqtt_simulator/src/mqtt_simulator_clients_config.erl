@@ -53,7 +53,7 @@ init([SyncInterval]) ->
     {ok, #state{sync_timer = SyncTimer,
                 sync_interval = SyncInterval}}.
 
-handle_call({update_config, Id, Config}, _From, State) ->
+handle_call({update_config, Config}, _From, State) ->
     Result = mqtt_simulator_clients_sup:update_client(Config),
     State2 = handle_client_update(Result, Config, State),
     {noreply, Result, State2};
