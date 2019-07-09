@@ -5,6 +5,7 @@
 -behavior(gen_statem).
 
 -export([start_link/3,
+         update_config/2,
          publish/3]).
 
 -export([callback_mode/0,
@@ -30,6 +31,9 @@
 start_link(Id, ConfigId, Config) ->
     gen_statem:start_link(?VIA_GPROC(Id), ?MODULE, [ConfigId, Config], []).
 
+update_config(Id, Config) ->
+    gen_statem:cast(?VIA_GPROC(Id), {update_config, Config}).
+
 -spec publish(term(), binary(), binary()) -> ok.
 publish(Id, Topic, Payload) ->
     gen_statem:cast(?VIA_GPROC(Id), {publish, Topic, Payload}).
@@ -48,6 +52,12 @@ init([ConfigId, Config]) ->
     {ok, disconnected, #data{config_id = ConfigId,
                              config = Config,
                              reconnect_timeout = ReconnectTimeout}, NextEvent}.
+
+handle_event(cast, {update_config, Config}, State, Data) ->
+    ?LOG_INFO(#{what => update_config, id => mqtt_simulator_client_config:id(Config),
+                state => State}),
+    UpdatedData = maybe_close_connection(Data),
+    try_connect(UpdatedData#data{config = Config});
 
 handle_event(cast, {publish, Topic, Payload}, connected, #data{client = Client}) ->
     emqttc:publish(Client, Topic, Payload),
@@ -99,6 +109,12 @@ terminate(Reason, _, _) ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
+
+maybe_close_connection(Data=#data{client = undefined}) ->
+    Data;
+maybe_close_connection(Data=#data{client = Client}) ->
+    ok = emqttc:disconnect(Client),
+    Data#data{client = undefined}.
 
 try_connect(Data=#data{config = Config}) ->
     DefaultConfig = default_config(),

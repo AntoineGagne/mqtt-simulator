@@ -30,7 +30,8 @@ all() ->
      connect_with_complete_configuration,
      connect_with_incomplete_configuration,
      reconnect_on_client_process_errors,
-     can_publish_data_on_connected_client
+     can_publish_data_on_connected_client,
+     stop_client_on_update_config
     ].
 
 init_per_testcase(_Name, Config) ->
@@ -44,6 +45,7 @@ init_per_testcase(_Name, Config) ->
                                             {ok, Pid}
                                     end),
     meck:expect(emqttc, publish, fun (_, _, _) -> ok end),
+    meck:expect(emqttc, disconnect, fun (_) -> ok end),
     [{pid, Pid}, {applications, Applications} | Config].
 
 end_per_testcase(_Name, Config) ->
@@ -95,6 +97,15 @@ can_publish_data_on_connected_client(_Config) ->
     mqtt_simulator_client:publish(?AN_ID, ?A_TOPIC, ?A_PAYLOAD),
 
     meck:wait(emqttc, publish, ['_', '_', '_'], ?TIMEOUT).
+
+stop_client_on_update_config() ->
+    [{doc, "Given a new configuration, when updating configuration, then stops previous client."}].
+stop_client_on_update_config(_Config) ->
+    {ok, _} = mqtt_simulator_client:start_link(?AN_ID, ?A_CONFIG_ID, ?A_CONFIG),
+
+    ok = mqtt_simulator_client:update_config(?AN_ID, ?A_CONFIG),
+
+    meck:wait(emqttc, disconnect, ['_'], ?TIMEOUT).
 
 %%%===================================================================
 %%% Internal functions
