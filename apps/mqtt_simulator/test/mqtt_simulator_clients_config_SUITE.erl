@@ -17,12 +17,15 @@ all() ->
     [
      stop_client_on_new_config_without_client,
      start_client_on_new_config,
-     restart_crashed_clients
+     restart_crashed_clients,
+     return_error_on_config_update_failure,
+     can_successfully_update_config
     ].
 
 init_per_testcase(_Name, Config) ->
     Pid = make_pid(),
     meck:new(mqtt_simulator_clients_sup),
+    meck:expect(mqtt_simulator_clients_sup, update_client, fun (_) -> ok end),
     meck:expect(mqtt_simulator_clients_sup, stop_client, fun (_) -> ok end),
     meck:expect(mqtt_simulator_clients_sup, start_client, fun (_) -> {ok, Pid} end),
     [{pid, Pid} | Config].
@@ -65,6 +68,22 @@ restart_crashed_clients(Config) ->
     exit(Pid, kill),
 
     meck:wait(2, mqtt_simulator_clients_sup, start_client, ['_'], ?TIMEOUT).
+
+return_error_on_config_update_failure() ->
+    [{doc, "Given an configuration update error, when updating configuration, "
+      "then returns error."}].
+return_error_on_config_update_failure(_Config) ->
+    meck:expect(mqtt_simulator_clients_sup, update_client, fun (_) -> {error, error} end),
+    {ok, _} = mqtt_simulator_clients_config:start_link(?SYNC_INTERVAL),
+
+    ?assertMatch({error, _}, mqtt_simulator_clients_config:update_config(?ANOTHER_CONFIG)).
+
+can_successfully_update_config() ->
+    [{doc, "Given a new configuration, when updating configuration, then returns success."}].
+can_successfully_update_config(_Config) ->
+    {ok, _} = mqtt_simulator_clients_config:start_link(?SYNC_INTERVAL),
+
+    ?assertMatch(ok, mqtt_simulator_clients_config:update_config(?ANOTHER_CONFIG)).
 
 %%%===================================================================
 %%% Internal functions

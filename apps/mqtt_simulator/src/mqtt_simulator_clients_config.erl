@@ -56,7 +56,7 @@ init([SyncInterval]) ->
 handle_call({update_config, Config}, _From, State) ->
     Result = mqtt_simulator_clients_sup:update_client(Config),
     State2 = handle_client_update(Result, Config, State),
-    {noreply, Result, State2};
+    {reply, Result, State2};
 
 handle_call({update_configs, Configs}, _From, State) ->
     NewConfigs = to_config_map(Configs),
