@@ -6,6 +6,8 @@
 
 %% API
 -export([start_link/1,
+         get_config/1,
+         get_configs/0,
          update_config/1,
          update_configs/1]).
 
@@ -35,6 +37,14 @@
 start_link(SyncInterval) ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [SyncInterval], []).
 
+-spec get_configs() -> [mqtt_simulator_client_config:config()].
+get_configs() ->
+    gen_server:call(?SERVER, get_configs).
+
+-spec get_config(binary()) -> mqtt_simulator_client_config:config() | error.
+get_config(Id) ->
+    gen_server:call(?SERVER, {get_config, Id}).
+
 -spec update_config(mqtt_simulator_client_config:config()) -> ok.
 update_config(Config) ->
     gen_server:call(?SERVER, {update_config, Config}).
@@ -52,6 +62,12 @@ init([SyncInterval]) ->
     SyncTimer = erlang:start_timer(SyncInterval, self(), synchronize),
     {ok, #state{sync_timer = SyncTimer,
                 sync_interval = SyncInterval}}.
+
+handle_call({get_config, Id}, _From, State=#state{configs_by_ids = ConfigsByIds}) ->
+    {reply, maps:find(Id, ConfigsByIds), State};
+
+handle_call(get_configs, _From, State=#state{configs_by_ids = ConfigsByIds}) ->
+    {reply, maps:values(ConfigsByIds), State};
 
 handle_call({update_config, Config}, _From, State) ->
     Result = mqtt_simulator_clients_sup:update_client(Config),

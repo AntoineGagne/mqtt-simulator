@@ -25,8 +25,8 @@ dispatch(Request=#{method := <<"PUT">>}, State) ->
     update_config(Request, State).
 
 fetch(Request, State) ->
-    ?LOG_INFO(#{what => fetch, state => State}),
-    {<<>>, Request, State}.
+    Id = cowboy_req:binding(id, Request),
+    handle_fetch(Id, Request, State).
 
 %%%===================================================================
 %%% cowboy callbacks
@@ -66,6 +66,15 @@ content_types_accepted(Request, State) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+handle_fetch(undefined, Request, State) ->
+    Raw = mqtt_simulator_clients_config:get_configs(),
+    Configs = mqtt_simulator_config_encoder:encode(Raw),
+    {Configs, Request, State};
+handle_fetch(Id, Request, State) ->
+    Raw = mqtt_simulator_clients_config:get_config(Id),
+    Config = mqtt_simulator_config_encoder:encode(Raw),
+    {Config, Request, State}.
 
 maybe_parse_body({ok, Decoded, _}, Parser) ->
     Parser(Decoded);

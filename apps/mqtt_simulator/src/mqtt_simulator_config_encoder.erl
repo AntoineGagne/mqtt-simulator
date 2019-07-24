@@ -3,13 +3,15 @@
 %% API
 -export([encode/1]).
 
+-type config() :: mqtt_simulator_client_config:config().
+
 %%%===================================================================
 %%% API
 %%%===================================================================
 
--spec encode(mqtt_simulator_client_config:config()) -> {ok, <<>>}.
-encode(_Config) ->
-    {ok, <<>>}.
+-spec encode([config()] | config()) -> {ok, binary()}.
+encode(Configs) ->
+    jsone:try_encode(Configs).
 
 %%%===================================================================
 %%% Internal functions
