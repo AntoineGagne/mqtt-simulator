@@ -56,6 +56,8 @@ init([ConfigId, Config]) ->
 handle_event(cast, {update_config, Config}, State, Data) ->
     ?LOG_INFO(#{what => update_config, id => mqtt_simulator_client_config:id(Config),
                 state => State}),
+    DataPoints = mqtt_simulator_client_config:data(Config),
+    ok = mqtt_simulator_data_simulators_config:update_config(Data#data.config_id, DataPoints),
     UpdatedData = maybe_close_connection(Data),
     try_connect(UpdatedData#data{config = Config});
 

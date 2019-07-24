@@ -96,6 +96,8 @@ parse_config(Config, {ok, Configs}) ->
         Error -> Error
     end.
 
-update_config(Request, Config) ->
-    ?LOG_DEBUG(#{what => update_config, configs => Config}),
+update_config(Request, {ok, Config}) ->
+    Id = cowboy_req:binding(id, Request),
+    ?LOG_DEBUG(#{what => update_config, configs => Config, id => Id}),
+    _ = mqtt_simulator_clients_config:update_config(mqtt_simulator_client_config:id(Id, Config)),
     {true, Request, Config}.
