@@ -12,7 +12,7 @@ RUN apk add --no-cache \
     libcrypto1.1=1.1.1b-r1 \
     ncurses-libs=6.1_p20190105-r0 \
     unixodbc=2.3.7-r0 \
-    libcurl=7.64.0-r1 \
+    libcurl=7.64.0-r3 \
     libuuid=2.33-r0
 # hadolint ignore=DL3010
 COPY --from=erlang-build /opt/mqtt_simulator/mqtt_simulator-0.1.0.tar.gz /opt
