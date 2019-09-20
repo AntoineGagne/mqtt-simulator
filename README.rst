@@ -57,7 +57,7 @@ After building the image, you can run the image by using the following command:
     docker run \
         --detach \
         --name "${name_of_the_running_container}" \
-        --publish "${port_on_host}:${port_of_simulator:8000}" \
+        --publish "${port_on_host}:${port_of_simulator:-8000}" \
         "${name_of_the_image}"
 
 Development
