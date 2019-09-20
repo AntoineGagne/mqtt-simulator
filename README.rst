@@ -19,7 +19,7 @@ Local Build
 -----------
 
 To build the runnable release, you need to have Erlang with OTP 21 and above.
-You also need `rebar3`. Then, you can run the following command:
+You also need ``rebar3``. Then, you can run the following command:
 
 .. code-block:: sh
 
@@ -66,7 +66,7 @@ Development
 Running all the tests and linters
 ---------------------------------
 
-You can run all the tests and linters with the `rebar3` alias:
+You can run all the tests and linters with the ``rebar3`` alias:
 
 .. code-block:: sh
 
