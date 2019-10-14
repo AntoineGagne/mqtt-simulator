@@ -31,6 +31,9 @@ start_link() ->
 
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
+    SynchronizationInterval = application:get_env(mqtt_simulator,
+                                                  synchronization_interval,
+                                                  ?DEFAULT_SYNCHRONIZATION_INTERVAL),
     {ok, {#{strategy => one_for_all,
             intensity => 5,
             period => 10},
@@ -48,7 +51,7 @@ init([]) ->
              modules => [mqtt_simulator_clients_sup]},
            #{id => mqtt_simulator_clients_config,
              start => {mqtt_simulator_clients_config, start_link,
-                       [?DEFAULT_SYNCHRONIZATION_INTERVAL]},
+                       [SynchronizationInterval]},
              restart => permanent,
              shutdown => 5000,
              type => worker,
