@@ -9,7 +9,7 @@
 %%% API
 %%%===================================================================
 
--spec encode([config()] | config()) -> {ok, binary()}.
+-spec encode([config()] | config()) -> {ok, binary()} | {error, term()}.
 encode(Configs) ->
     jsone:try_encode(Configs).
 

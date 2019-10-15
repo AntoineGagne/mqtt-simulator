@@ -31,6 +31,7 @@
 start_link(Id, ConfigId, Config) ->
     gen_statem:start_link(?VIA_GPROC(Id), ?MODULE, [ConfigId, Config], []).
 
+-spec update_config(term(), mqtt_simulator_client_config:config()) -> ok.
 update_config(Id, Config) ->
     gen_statem:cast(?VIA_GPROC(Id), {update_config, Config}).
 

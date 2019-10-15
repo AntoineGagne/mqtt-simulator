@@ -25,11 +25,12 @@
 start_link(Id, Config) ->
     supervisor:start_link(?VIA_GPROC(Id), ?MODULE, [Config]).
 
+-spec update_config(mqtt_simulator_client_config:config()) -> ok | {error, not_found}.
 update_config(Config) ->
     Id = mqtt_simulator_client_config:id(Config),
     ClientId = ?CLIENT_ID(Id),
     case ?WHERE(ClientId) of
-        undefined -> {error, not_found};
+        undefined -> {error, {not_found, Id}};
         _ -> mqtt_simulator_client:update_config(ClientId, Config)
     end.
 

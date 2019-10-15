@@ -20,13 +20,15 @@
 %%%===================================================================
 
 dispatch(Request=#{method := <<"POST">>}, State) ->
+    ?LOG_DEBUG(#{what => update_configs, method => post}),
     update_configs(Request, State);
 dispatch(Request=#{method := <<"PUT">>}, State) ->
+    ?LOG_DEBUG(#{what => update_config, method => put}),
     update_config(Request, State).
 
 fetch(Request, State) ->
-    Id = cowboy_req:binding(id, Request),
-    handle_fetch(Id, Request, State).
+    {ok, Response} = mqtt_simulator_config_encoder:encode(State),
+    {Response, Request, State}.
 
 %%%===================================================================
 %%% cowboy callbacks
@@ -49,7 +51,8 @@ malformed_request(Request, State) ->
     {false, Request, State}.
 
 resource_exists(Request, State) ->
-    {false, Request, State}.
+    Id = cowboy_req:binding(id, Request),
+    handle_resource_exists(Id, Request, State).
 
 delete_resource(Request, State) ->
     {true, Request, State}.
@@ -67,14 +70,20 @@ content_types_accepted(Request, State) ->
 %%% Internal functions
 %%%===================================================================
 
-handle_fetch(undefined, Request, State) ->
-    Raw = mqtt_simulator_clients_config:get_configs(),
-    Configs = mqtt_simulator_config_encoder:encode(Raw),
-    {Configs, Request, State};
-handle_fetch(Id, Request, State) ->
-    Raw = mqtt_simulator_clients_config:get_config(Id),
-    Config = mqtt_simulator_config_encoder:encode(Raw),
-    {Config, Request, State}.
+handle_resource_exists(undefined, Request, _State) ->
+    ?LOG_INFO(#{what => fetch_config, method => get}),
+    Configs = mqtt_simulator_clients_config:get_configs(),
+    {true, Request, Configs};
+handle_resource_exists(Id, Request, State) ->
+    ?LOG_INFO(#{what => fetch_config, id => Id, method => get}),
+    Return = mqtt_simulator_clients_config:get_config(Id),
+    handle_get_config(Return, Request, State).
+
+handle_get_config({error, {not_found, Id}}, Request, State) ->
+    ?LOG_ERROR(#{what => fetch_config, status => not_found, id => Id}),
+    {false, Request, State};
+handle_get_config(Config, Request, _State) ->
+    {true, Request, Config}.
 
 maybe_parse_body({ok, Decoded, _}, Parser) ->
     Parser(Decoded);
@@ -89,8 +98,9 @@ handle_parse_result(Reason={error, _}, Request=#{method := Method}) ->
 
 update_configs(Request, {ok, Configs}) ->
     ?LOG_DEBUG(#{what => update_configs, configs => Configs}),
-    ok = mqtt_simulator_clients_config:update_configs(Configs),
-    {true, Request, Configs}.
+    Return = mqtt_simulator_clients_config:update_configs(Configs),
+    {ok, Encoded} = mqtt_simulator_config_encoder:encode(Return),
+    {true, cowboy_req:set_resp_body(Encoded, Request), Configs}.
 
 parse_configs(Decoded) when is_list(Decoded) ->
     lists:foldl(fun parse_config/2, {ok, []}, Decoded);
@@ -108,5 +118,6 @@ parse_config(Config, {ok, Configs}) ->
 update_config(Request, {ok, Config}) ->
     Id = cowboy_req:binding(id, Request),
     ?LOG_DEBUG(#{what => update_config, configs => Config, id => Id}),
-    _ = mqtt_simulator_clients_config:update_config(mqtt_simulator_client_config:id(Id, Config)),
+    UpdatedConfig = mqtt_simulator_client_config:id(Id, Config),
+    _ = mqtt_simulator_clients_config:update_config(UpdatedConfig),
     {true, Request, Config}.
