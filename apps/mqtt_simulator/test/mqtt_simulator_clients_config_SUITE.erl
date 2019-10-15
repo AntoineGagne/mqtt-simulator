@@ -31,6 +31,7 @@ init_per_testcase(_Name, Config) ->
     [{pid, Pid} | Config].
 
 end_per_testcase(_Name, Config) ->
+    meck:unload(),
     Config.
 
 stop_client_on_new_config_without_client() ->
