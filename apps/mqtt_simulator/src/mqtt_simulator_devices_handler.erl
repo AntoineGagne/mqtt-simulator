@@ -28,7 +28,8 @@ dispatch(Request=#{method := <<"PUT">>}, State) ->
 
 fetch(Request, State) ->
     {ok, Response} = mqtt_simulator_config_encoder:encode(State),
-    {Response, Request, State}.
+    {ok, Encoded} = jsone:try_encode(Response),
+    {Encoded, Request, State}.
 
 %%%===================================================================
 %%% cowboy callbacks
@@ -64,20 +65,25 @@ allowed_methods(Request, State) ->
     {[<<"POST">>, <<"PUT">>, <<"DELETE">>, <<"GET">>], Request, State}.
 
 content_types_accepted(Request, State) ->
+    ?LOG_DEBUG(#{what => update, request => Request, state => State}),
     {[{{<<"application">>, <<"json">>, '*'}, dispatch}], Request, State}.
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
 
-handle_resource_exists(undefined, Request, _State) ->
+handle_resource_exists(undefined, Request=#{method := <<"GET">>}, _State) ->
     ?LOG_INFO(#{what => fetch_config, method => get}),
     Configs = mqtt_simulator_clients_config:get_configs(),
     {true, Request, Configs};
-handle_resource_exists(Id, Request, State) ->
+handle_resource_exists(undefined, Request, State) ->
+    {true, Request, State};
+handle_resource_exists(Id, Request=#{method := <<"GET">>}, State) ->
     ?LOG_INFO(#{what => fetch_config, id => Id, method => get}),
     Return = mqtt_simulator_clients_config:get_config(Id),
-    handle_get_config(Return, Request, State).
+    handle_get_config(Return, Request, State);
+handle_resource_exists(_Id, Request, State) ->
+    {true, Request, State}.
 
 handle_get_config({error, {not_found, Id}}, Request, State) ->
     ?LOG_ERROR(#{what => fetch_config, status => not_found, id => Id}),
@@ -100,7 +106,8 @@ update_configs(Request, {ok, Configs}) ->
     ?LOG_DEBUG(#{what => update_configs, configs => Configs}),
     Return = mqtt_simulator_clients_config:update_configs(Configs),
     {ok, Encoded} = mqtt_simulator_config_encoder:encode(Return),
-    {true, cowboy_req:set_resp_body(Encoded, Request), Configs}.
+    {ok, Binary} = jsone:try_encode(Encoded),
+    {true, cowboy_req:set_resp_body(Binary, Request), Configs}.
 
 parse_configs(Decoded) when is_list(Decoded) ->
     lists:foldl(fun parse_config/2, {ok, []}, Decoded);
@@ -117,7 +124,13 @@ parse_config(Config, {ok, Configs}) ->
 
 update_config(Request, {ok, Config}) ->
     Id = cowboy_req:binding(id, Request),
-    ?LOG_DEBUG(#{what => update_config, configs => Config, id => Id}),
+    ?LOG_DEBUG(#{what => update_config, config => Config, id => Id}),
     UpdatedConfig = mqtt_simulator_client_config:id(Id, Config),
-    _ = mqtt_simulator_clients_config:update_config(UpdatedConfig),
-    {true, Request, Config}.
+    case mqtt_simulator_clients_config:update_config(UpdatedConfig) of
+        ok ->
+            {ok, Encoded} = mqtt_simulator_config_encoder:encode(UpdatedConfig),
+            {ok, Binary} = jsone:try_encode(Encoded),
+            {true, cowboy_req:set_resp_body(Binary, Request), Config};
+        {error, _} ->
+            {false, Request, Config}
+    end.
