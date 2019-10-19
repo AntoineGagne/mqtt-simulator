@@ -46,7 +46,7 @@ get_configs() ->
 get_config(Id) ->
     gen_server:call(?SERVER, {get_config, Id}).
 
--spec update_config(config()) -> ok.
+-spec update_config(config()) -> ok | {error, {not_found, term()}}.
 update_config(Config) ->
     gen_server:call(?SERVER, {update_config, Config}).
 
