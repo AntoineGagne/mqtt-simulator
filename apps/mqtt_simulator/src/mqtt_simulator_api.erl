@@ -42,8 +42,7 @@ init([]) ->
     {ok, #state{}}.
 
 handle_call(_Request, _From, State) ->
-    Reply = ok,
-    {reply, Reply, State}.
+    {reply, ok, State}.
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
