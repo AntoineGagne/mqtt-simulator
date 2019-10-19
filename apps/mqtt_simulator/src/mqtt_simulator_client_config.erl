@@ -2,6 +2,7 @@
 
 %% API
 -export([init/0,
+         fold/3,
          id/1,
          id/2,
          host/1,
@@ -46,6 +47,10 @@ init() ->
       port => 0,
       reconnect_timeout => ?DEFAULT_RECONNECT_TIMEOUT,
       data => []}.
+
+-spec fold(fun ((Key :: term(), Value :: term(), Acc) -> Acc), Acc, config()) -> Acc.
+fold(Fun, Acc, Config) ->
+    maps:fold(Fun, Acc, Config).
 
 -spec id(binary(), config()) -> config().
 id(Id, Config) ->
