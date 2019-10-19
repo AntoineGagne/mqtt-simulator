@@ -19,7 +19,10 @@ all() ->
      start_client_on_new_config,
      restart_crashed_clients,
      return_error_on_config_update_failure,
-     can_successfully_update_config
+     can_successfully_update_config,
+     can_successfully_get_config,
+     return_error_when_fetching_non_existent_config,
+     can_successfully_get_configs
     ].
 
 init_per_testcase(_Name, Config) ->
@@ -85,6 +88,31 @@ can_successfully_update_config(_Config) ->
     {ok, _} = mqtt_simulator_clients_config:start_link(?SYNC_INTERVAL),
 
     ?assertMatch(ok, mqtt_simulator_clients_config:update_config(?ANOTHER_CONFIG)).
+
+can_successfully_get_config() ->
+    [{doc, "Given an existing configuration, when fetching configuration, "
+      "then returns configuration."}].
+can_successfully_get_config(_Config) ->
+    {ok, _} = mqtt_simulator_clients_config:start_link(?SYNC_INTERVAL),
+    mqtt_simulator_clients_config:update_configs([?A_CONFIG]),
+
+    ?assertMatch({ok, _}, mqtt_simulator_clients_config:get_config(?AN_ID)).
+
+return_error_when_fetching_non_existent_config() ->
+    [{doc, "Given a non-existent configuration, when fetching configuration, "
+      "then returns an error."}].
+return_error_when_fetching_non_existent_config(_Config) ->
+    {ok, _} = mqtt_simulator_clients_config:start_link(?SYNC_INTERVAL),
+
+    ?assertMatch({error, _}, mqtt_simulator_clients_config:get_config(?AN_ID)).
+
+can_successfully_get_configs() ->
+    [{doc, "Given existing configuration, when fetching configurations, "
+      "then returns all the configuration."}].
+can_successfully_get_configs(_Config) ->
+    {ok, _} = mqtt_simulator_clients_config:start_link(?SYNC_INTERVAL),
+
+    ?assertMatch([], mqtt_simulator_clients_config:get_configs()).
 
 %%%===================================================================
 %%% Internal functions
