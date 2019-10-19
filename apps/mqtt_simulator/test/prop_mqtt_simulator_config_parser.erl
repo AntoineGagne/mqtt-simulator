@@ -62,9 +62,9 @@ config_with_missing_key() ->
 config_with_data_with_missing_keys() ->
     ?LET({Config, Keys}, {valid_config(), keys(mandatory_data_keys())},
          begin
-             Data = mqtt_simulator_client_config:data(Config),
+             #{data := Data} = Config,
              DataWithMissingKeys = lists:map(fun (D) -> maps:without(Keys, D) end, Data),
-             mqtt_simulator_client_config:data(DataWithMissingKeys, Config)
+             Config#{data := DataWithMissingKeys}
          end).
 
 valid_config() ->
