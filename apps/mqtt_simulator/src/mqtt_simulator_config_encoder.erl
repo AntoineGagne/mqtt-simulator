@@ -39,6 +39,8 @@ do_encode_connection_info(Config) ->
     Parsed = mqtt_simulator_client_config:fold(fun encode_connection_info/3, #{}, Config),
     do_validate_keys(connection_info_mandatory_keys(), Parsed).
 
+encode_connection_info(_, _, Error={error, _}) ->
+    Error;
 encode_connection_info(id, V, Acc) ->
     Acc#{<<"id">> => V};
 encode_connection_info(host, V, Acc) ->
