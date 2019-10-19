@@ -34,6 +34,7 @@
 -export_type([config/0,
               data/0]).
 
+-define(UUID, uuid:uuid_to_string(uuid:get_v4(), binary_standard)).
 -define(DEFAULT_RECONNECT_TIMEOUT, 5000).
 
 %%%===================================================================
@@ -42,7 +43,7 @@
 
 -spec init() -> config().
 init() ->
-    #{id => uuid:uuid_to_string(uuid:get_v4(), binary_standard),
+    #{id => ?UUID,
       host => <<"">>,
       port => 0,
       reconnect_timeout => ?DEFAULT_RECONNECT_TIMEOUT,
