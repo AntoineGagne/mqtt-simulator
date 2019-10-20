@@ -4,8 +4,8 @@ branches:
   - master
 environment:
   matrix:
-  - erlang_version: 21.3
-  - erlang_version: 22.1
+  - erlang_version: 21.2
+  - erlang_version: 22.0
 install:
 - ps: choco install erlang --version $env:erlang_version
 - ps: choco install rebar3
