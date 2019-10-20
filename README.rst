@@ -5,6 +5,9 @@ mqtt-simulator
 .. image:: https://travis-ci.org/AntoineGagne/mqtt-simulator.svg?branch=master
     :target: https://travis-ci.org/AntoineGagne/mqtt-simulator
 
+.. image:: https://ci.appveyor.com/api/projects/status/glyeekdu4vum33ht/branch/master?svg=true
+    :target: https://ci.appveyor.com/api/projects/status/glyeekdu4vum33ht/branch/master
+
 :Author: `Antoine Gagné <gagnantoine@gmail.com>`_
 
 .. contents::
