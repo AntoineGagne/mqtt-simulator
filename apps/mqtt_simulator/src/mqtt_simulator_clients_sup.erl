@@ -5,6 +5,7 @@
 %% API
 -export([start_link/0,
          start_client/1,
+         update_client/1,
          stop_client/1]).
 
 %% Supervisor callbacks
@@ -29,6 +30,10 @@ start_link() ->
 start_client(Config) ->
     Id = mqtt_simulator_client_config:id(Config),
     supervisor:start_child(?SERVER, [?CLIENT_SUP_ID(Id), Config]).
+
+-spec update_client(mqtt_simulator_client_config:config()) -> ok | {error, term()}.
+update_client(Config) ->
+    mqtt_simulator_client_sup:update_config(Config).
 
 -spec stop_client(pid()) -> ok | {error, term()}.
 stop_client(Pid) ->

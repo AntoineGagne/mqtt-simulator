@@ -1,5 +1,7 @@
 {"1.1.0",
-[{<<"emqttc">>,
+[{<<"cowboy">>,{pkg,<<"cowboy">>,<<"2.6.3">>},0},
+ {<<"cowlib">>,{pkg,<<"cowlib">>,<<"2.7.3">>},1},
+ {<<"emqttc">>,
   {git,"https://github.com/emqtt/emqttc.git",
        {ref,"1a0d45085b987bdca74a6efbdc18aa5af85bfc43"}},
   0},
@@ -14,13 +16,17 @@
   0},
  {<<"jsone">>,{pkg,<<"jsone">>,<<"1.4.7">>},0},
  {<<"quickrand">>,{pkg,<<"quickrand">>,<<"1.7.5">>},1},
+ {<<"ranch">>,{pkg,<<"ranch">>,<<"1.7.1">>},1},
  {<<"recon">>,{pkg,<<"recon">>,<<"2.5.0">>},0},
  {<<"uuid">>,{pkg,<<"uuid_erl">>,<<"1.7.3">>},0}]}.
 [
 {pkg_hash,[
+ {<<"cowboy">>, <<"99AA50E94E685557CAD82E704457336A453D4ABCB77839AD22DBE71F311FCC06">>},
+ {<<"cowlib">>, <<"A7FFCD0917E6D50B4D5FB28E9E2085A0CEB3C97DEA310505F7460FF5ED764CE9">>},
  {<<"gproc">>, <<"CEA02C578589C61E5341FCE149EA36CCEF236CC2ECAC8691FBA408E7EA77EC2F">>},
  {<<"jsone">>, <<"A970C23D9700AE7842B526C57677E6E3F10894B429524696EAD547E9302391C0">>},
  {<<"quickrand">>, <<"E3086A153EB13A057FC19192D05E2D4C6BB2BDBB55746A699BEAE9847AC17CA8">>},
+ {<<"ranch">>, <<"6B1FAB51B49196860B733A49C07604465A47BDB78AA10C1C16A3D199F7F8C881">>},
  {<<"recon">>, <<"2F7FCBEC2C35034BADE2F9717F77059DC54EB4E929A3049CA7BA6775C0BD66CD">>},
  {<<"uuid">>, <<"C5DF97D1A3D626235C2415E74053C47B2138BB863C5CD802AB5CAECB8ECC019F">>}]}
 ].
