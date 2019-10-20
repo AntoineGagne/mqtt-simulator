@@ -7,7 +7,7 @@ environment:
   - erlang_version: 21.3
   - erlang_version: 22.1
 install:
-- ps: choco install erlang --version $env:erlang_vsn
+- ps: choco install erlang --version $env:erlang_version
 - ps: choco install rebar3
 build_script:
 - ps: rebar3 as prod release -n mqtt_simulator
