@@ -1,0 +1,26 @@
+# To validate:
+#   cat codecov.yml | curl --data-binary @- https://codecov.io/validate
+
+codecov:
+  notify:
+    require_ci_to_pass: no
+  ci:
+    - appveyor
+    - travis
+
+coverage:
+  precision: 2
+  round: down
+  range: "55...100"
+
+  status:
+    project:
+      default:
+        threshold: 1
+    patch:
+      default:
+        threshold: 1
+        only_pulls: true
+    changes: no
+
+comment: off
