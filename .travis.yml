@@ -2,12 +2,13 @@ language: erlang
 otp_release:
     - 21.3
     - 22.1
-install:
-    pip install --user codecov
 
 script:
     - rebar3 check
 
-after_success:
-    - codecov
+cache:
+    directories:
+        - "$HOME/.cache/rebar3"
 
+after_success:
+   - bash <(curl -s https://codecov.io/bash) -f _build/test/cover/*.coverdata
