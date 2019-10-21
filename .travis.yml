@@ -11,4 +11,6 @@ cache:
         - "$HOME/.cache/rebar3"
 
 after_success:
-   - bash <(curl -s https://codecov.io/bash) -f _build/test/cover/*.coverdata
+   - bash <(curl -s https://codecov.io/bash) -f _build/test/cover/eunit.coverdata
+   - bash <(curl -s https://codecov.io/bash) -f _build/test/cover/proper.coverdata
+   - bash <(curl -s https://codecov.io/bash) -f _build/test/cover/ct.coverdata
