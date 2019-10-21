@@ -3,7 +3,7 @@ otp_release:
     - 21.3
     - 22.1
 install:
-    pip3 install --user codecov
+    pip install --user codecov
 
 script:
     - rebar3 check
