@@ -11,6 +11,6 @@ cache:
         - "$HOME/.cache/rebar3"
 
 after_success:
-   - bash <(curl -s https://codecov.io/bash) -f _build/test/cover/eunit.coverdata
-   - bash <(curl -s https://codecov.io/bash) -f _build/test/cover/proper.coverdata
-   - bash <(curl -s https://codecov.io/bash) -f _build/test/cover/ct.coverdata
+   - curl -s https://codecov.io/bash > upload-coverage.sh
+   - chmod +x upload-coverage.sh
+   - find _build/test/cover -name '*.coverdata' -type f -exec ./upload-coverage.sh -f {} \;
