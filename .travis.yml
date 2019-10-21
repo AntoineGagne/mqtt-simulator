@@ -13,4 +13,4 @@ cache:
 after_success:
    - curl -s https://codecov.io/bash > upload-coverage.sh
    - chmod +x upload-coverage.sh
-   - find _build/test/cover -name '*.coverdata' -type f -exec ./upload-coverage.sh -f {} \;
+   - ./upload-coverage.sh -v -s _build/test/cover -f '*.coverdata'
