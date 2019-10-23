@@ -1,20 +1,31 @@
 version: "{build}"
 branches:
   only:
-  - master
+    - master
 environment:
   matrix:
-  - erlang_version: 21.2
-  - erlang_version: 22.0
+    - erlang_version: 21.2
+    - erlang_version: 22.0
 install:
-- ps: choco install erlang --version $env:erlang_version
-- ps: choco install rebar3
+  - ps: choco install erlang --version $env:erlang_version
+  - ps: choco install rebar3
 build_script:
-- ps: rebar3 as prod release -n mqtt_simulator
+  - ps: rebar3 as prod tar -n mqtt_simulator
 test_script:
-- ps: rebar3 check
-notifications:
-- provider: GitHubPullRequest
-  on_build_success: true
-  on_build_failure: true
-  on_build_status_changed: false
+  - ps: rebar3 check
+cache:
+  - '%USERPROFILE%\.cache\rebar3'
+deploy:
+  release: mqtt-simulator-v$(appveyor_build_version)
+  description: 'Windows Build'
+  provider: GitHub
+  auth_token:
+    secure: x/8ybde3PJqvqqzYoPub55aCdrER45ZAkAGetkBBibumWvv7WFLJXkDiRRmJDdxr
+  artifact: _build/prod/rel/mqtt_simulator.tar.gz
+  draft: false
+  prerelease: false
+  on:
+    # release from master branch only
+    branch:
+    # deploy on tag push only
+    APPVEYOR_REPO_TAG: true
