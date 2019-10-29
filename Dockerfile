@@ -15,11 +15,11 @@ RUN apk add --no-cache \
     libcurl=7.64.0-r3 \
     libuuid=2.33-r0
 # hadolint ignore=DL3010
-COPY --from=erlang-build /opt/mqtt_simulator/mqtt_simulator-0.1.0.tar.gz /opt
+COPY --from=erlang-build /opt/mqtt_simulator/mqtt_simulator-*.tar.gz /opt
 RUN set -e \
     && mkdir -p /opt/mqtt_simulator \
-    && tar -xzf /opt/mqtt_simulator-0.1.0.tar.gz -C /opt/mqtt_simulator \
-    && rm /opt/mqtt_simulator-0.1.0.tar.gz
+    && tar -xzf /opt/mqtt_simulator-*.tar.gz -C /opt/mqtt_simulator \
+    && rm /opt/mqtt_simulator-*.tar.gz
 WORKDIR /opt/mqtt_simulator
 
 RUN set -e \
