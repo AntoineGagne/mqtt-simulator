@@ -16,16 +16,16 @@ test_script:
 cache:
   - '%USERPROFILE%\.cache\rebar3'
 deploy:
-  release: mqtt-simulator-v$(appveyor_build_version)
   description: 'Windows Build'
   provider: GitHub
   auth_token:
     secure: x/8ybde3PJqvqqzYoPub55aCdrER45ZAkAGetkBBibumWvv7WFLJXkDiRRmJDdxr
-  artifact: _build/prod/rel/mqtt_simulator.tar.gz
+  artifact: _build\prod\rel\mqtt_simulator\mqtt_simulator-*.tar.gz
   draft: false
   prerelease: false
+  force_update: true
   on:
     # release from master branch only
-    branch:
+    branch: master
     # deploy on tag push only
     APPVEYOR_REPO_TAG: true
