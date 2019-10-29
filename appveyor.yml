@@ -17,17 +17,17 @@ cache:
   - '%USERPROFILE%\.cache\rebar3'
 artifacts:
   - path: '**\*.tar.gz'
-deploy:
-  description: 'Windows Build'
-  provider: GitHub
-  auth_token:
-    secure: x/8ybde3PJqvqqzYoPub55aCdrER45ZAkAGetkBBibumWvv7WFLJXkDiRRmJDdxr
-  artifact: /.*\.tar\.gz
-  draft: false
-  prerelease: false
-  force_update: true
-  on:
-    # release from master branch only
-    branch: master
-    # deploy on tag push only
-    APPVEYOR_REPO_TAG: true
+# deploy:
+#   description: 'Windows Build'
+#   provider: GitHub
+#   auth_token:
+#     secure: x/8ybde3PJqvqqzYoPub55aCdrER45ZAkAGetkBBibumWvv7WFLJXkDiRRmJDdxr
+#   artifact: /.*\.tar\.gz
+#   draft: false
+#   prerelease: false
+#   force_update: true
+#   on:
+#     # release from master branch only
+#     branch: master
+#     # deploy on tag push only
+#     APPVEYOR_REPO_TAG: true
