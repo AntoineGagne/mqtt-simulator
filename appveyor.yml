@@ -23,6 +23,7 @@ deploy:
   artifact: _build\prod\rel\mqtt_simulator\mqtt_simulator-*.tar.gz
   draft: false
   prerelease: false
+  force_update: true
   on:
     # release from master branch only
     branch: master
