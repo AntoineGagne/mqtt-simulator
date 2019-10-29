@@ -12,6 +12,10 @@ cache:
 
 deploy:
     provider: releases
+    script:
+        - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+        - docker build -t "${DOCKER_USERNAME}/mqtt-simulator:${TRAVIS_TAG}" -f Dockerfile
+        - docker push "${DOCKER_USERNAME}/mqtt-simulator:${TRAVIS_TAG}"
     api_key:
         secure: jwuIQHtpOxJfYf/RpG+4ZODocYxN3rEGxZT/Cg20bB8b8NDkX5WlaeyDLVYOuM5TIqpCh0R8EW4YITcswEkw+HSY+HCQKwDSzJTTxE4r1qIea2aLAdiOSVhCcOWhnz8E78tw+n7MiZMKH1VZRbHlanPrjJWhA4DEmP9zsbKwlTnFCytCZzOroaijp+vgkHJ4a/Dn/tIpBOJUDvDvLq2DV4q7RCr7+X/sYvhsrmrifVcMDKIFMHZqRUCQQLUFrQHL8+5VT4qwMczaVlorNfAVL0Bg6NiwqP1xmY1dYYi7O9chg2NdxmlWu8KxCWtpvqOLuPlQC6U20Fta9kDSgNcDLFWllibNSUEfLrkXDVd3kILWTJPmjPpuZ37YoAQDgC7noa0zKeEzicUy+NSlbAdDqqbMHUY7lNCrqUzXFPGjkyzpY9K+RBDAQnkQiXaQRRCD565YZ55tV/EtwO4I3V/+WkMVzJzEYqA2jwGQT/o7MV/1IReaXKZwaQBmj4J5o4gOJEvrdrZMj1F+e6HK0yTy7oYlLrkScJ8O9lgqMyh0HQUHj4tC0jTH9VYgTiap/0el4zhev8UCaqVET/b8cXvwQzbtNVSjeyG6kcxpM/L0OdJz9TBxMiAgHA+7K7RN/3lLhNulEg9fCYzAolggYnoWBF2XrFIijisLMPYx2PEyyJo=
     file: _build/prod/rel/mqtt_simulator.tar.gz
