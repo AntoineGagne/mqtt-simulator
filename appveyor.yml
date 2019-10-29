@@ -21,7 +21,7 @@ deploy:
   provider: GitHub
   auth_token:
     secure: x/8ybde3PJqvqqzYoPub55aCdrER45ZAkAGetkBBibumWvv7WFLJXkDiRRmJDdxr
-  artifact: _build/prod/rel/mqtt_simulator/mqtt_simulator-0.1.0.tar.gz
+  artifact: _build\prod\rel\mqtt_simulator\mqtt_simulator-*.tar.gz
   draft: false
   prerelease: false
   on:
