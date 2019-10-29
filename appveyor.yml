@@ -19,8 +19,6 @@ cache:
   - '%USERPROFILE%\.cache\rebar3'
 artifacts:
   - path: '**\*.tar.gz'
-    name: Release
-    type: File
 deploy:
   description: 'Windows Build'
   provider: GitHub
